@@ -124,7 +124,7 @@ const UsersPage: React.FC = () => {
     try {
       if (isBackendConnected) {
         // Use real API
-        const { userService } = await import('../services/userService')
+        const { userService } = await import('../../services/userService')
         const newUser = await userService.createUser(formData as any)
         setUsers([newUser, ...users])
       } else {
@@ -160,7 +160,7 @@ const UsersPage: React.FC = () => {
 
     try {
       if (isBackendConnected) {
-        const { userService } = await import('../services/userService')
+        const { userService } = await import('../../services/userService')
         await userService.deleteUser(userId)
       }
       
@@ -178,7 +178,7 @@ const UsersPage: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      const { authService } = await import('../services/authService')
+      const { authService } = await import('../../services/authService')
       await authService.logout()
     } catch (error) {
       console.warn('Auth service not available, doing local logout')
