@@ -77,7 +77,7 @@ const UsersPage: React.FC = () => {
       setLoading(true)
       
       // Try to use the user service if backend is available
-      const { userService } = await import('../services/userService')
+      const { userService } = await import('../../services/userService')
       const response = await userService.getUsers({
         page: currentPage,
         limit: 20,
