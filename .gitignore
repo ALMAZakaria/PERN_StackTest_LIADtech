@@ -1,0 +1,9 @@
+.scannerwork
+
+# npm
+node_modules
+npm-shrinkwrap.json
+*.log
+*.gz
+*.env
+.env.backup
