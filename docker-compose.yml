@@ -48,7 +48,7 @@ services:
       JWT_REFRESH_SECRET: dev-refresh-secret-key-change-in-production
       CORS_ORIGIN: http://localhost:3000
       SWAGGER_ENABLED: "true"
-      DATABASE_URL: postgresql://postgres.rgbrtekldiwlybfgpduq:Test_DB123456789Test_DB@aws-1-eu-west-3.pooler.supabase.com:5432/Test_DB?schema=public
+      DATABASE_URL: postgres://e48dee9ced96491ba00deb235b058b83c76360a5f57db8be08b4e874f13eee4b:sk_EWjlERBjwuYoZKA9pQlOp@db.prisma.io:5432/postgres?sslmode=require
     ports:
       - "5000:5000"
     volumes:

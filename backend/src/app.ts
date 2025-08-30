@@ -17,6 +17,9 @@ import authRoutes from './modules/auth/router/auth.router';
 import dashboardRoutes from './modules/dashboard/router/dashboard.router';
 import freelanceRoutes from './modules/freelance/router/freelance.router';
 import missionRoutes from './modules/mission/router/mission.router';
+import companyRoutes from './modules/company/router/company.router';
+import skillsRoutes from './modules/skills/skills.router';
+import portfolioRoutes from './modules/portfolio/portfolio.router';
 
 const app = express();
 
@@ -73,6 +76,9 @@ apiRouter.use('/users', userRoutes);
 apiRouter.use('/dashboard', dashboardRoutes);
 apiRouter.use('/freelance', freelanceRoutes);
 apiRouter.use('/missions', missionRoutes);
+apiRouter.use('/company', companyRoutes);
+apiRouter.use('/skills', skillsRoutes);
+apiRouter.use('/portfolio', portfolioRoutes);
 
 // Mount API routes with version prefix
 app.use(`/api/${config.API_VERSION}`, apiRouter);

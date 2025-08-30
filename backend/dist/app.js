@@ -19,6 +19,9 @@ const auth_router_1 = __importDefault(require("./modules/auth/router/auth.router
 const dashboard_router_1 = __importDefault(require("./modules/dashboard/router/dashboard.router"));
 const freelance_router_1 = __importDefault(require("./modules/freelance/router/freelance.router"));
 const mission_router_1 = __importDefault(require("./modules/mission/router/mission.router"));
+const company_router_1 = __importDefault(require("./modules/company/router/company.router"));
+const skills_router_1 = __importDefault(require("./modules/skills/skills.router"));
+const portfolio_router_1 = __importDefault(require("./modules/portfolio/portfolio.router"));
 const app = (0, express_1.default)();
 app.use((0, helmet_1.default)());
 app.use((0, cors_1.default)({
@@ -55,6 +58,9 @@ apiRouter.use('/users', router_1.default);
 apiRouter.use('/dashboard', dashboard_router_1.default);
 apiRouter.use('/freelance', freelance_router_1.default);
 apiRouter.use('/missions', mission_router_1.default);
+apiRouter.use('/company', company_router_1.default);
+apiRouter.use('/skills', skills_router_1.default);
+apiRouter.use('/portfolio', portfolio_router_1.default);
 app.use(`/api/${server_1.config.API_VERSION}`, apiRouter);
 if (server_1.config.SWAGGER_ENABLED) {
     const swaggerOptions = {

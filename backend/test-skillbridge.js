@@ -114,6 +114,56 @@ app.get('/api/v1/company/profile', (req, res) => {
   });
 });
 
+app.get('/api/v1/skills', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Skills endpoint working',
+    data: [
+      'React', 'Node.js', 'TypeScript', 'Python', 'JavaScript', 'PostgreSQL',
+      'AWS', 'Docker', 'MongoDB', 'Express.js', 'Vue.js', 'Angular'
+    ]
+  });
+});
+
+app.get('/api/v1/skills/search', (req, res) => {
+  const query = req.query.query || '';
+  const skills = ['React', 'Node.js', 'TypeScript', 'Python', 'JavaScript'];
+  const filtered = skills.filter(skill => 
+    skill.toLowerCase().includes(query.toLowerCase())
+  );
+  
+  res.json({
+    success: true,
+    message: 'Skills search working',
+    data: filtered
+  });
+});
+
+app.get('/api/v1/portfolio/user/my-portfolio', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Portfolio endpoint working',
+    data: [
+      {
+        id: 'project-1',
+        title: 'E-commerce Platform',
+        description: 'Modern e-commerce platform built with React and Node.js',
+        technologies: ['React', 'Node.js', 'PostgreSQL'],
+        imageUrl: 'https://example.com/project1.jpg',
+        projectUrl: 'https://project1.com'
+      },
+      {
+        id: 'project-2',
+        title: 'Task Management App',
+        description: 'Collaborative task management application',
+        technologies: ['Vue.js', 'Express.js', 'MongoDB'],
+        imageUrl: 'https://example.com/project2.jpg',
+        projectUrl: 'https://project2.com'
+      }
+    ]
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 SkillBridge Pro Test Server running on http://localhost:${PORT}`);
@@ -122,6 +172,9 @@ app.listen(PORT, () => {
   console.log(`🏢 Company Profile: http://localhost:${PORT}/api/v1/company/profile`);
   console.log(`🎯 Missions: http://localhost:${PORT}/api/v1/missions`);
   console.log(`🔍 Search Freelancers: http://localhost:${PORT}/api/v1/freelance/search`);
+  console.log(`💼 Skills: http://localhost:${PORT}/api/v1/skills`);
+  console.log(`🔍 Skills Search: http://localhost:${PORT}/api/v1/skills/search`);
+  console.log(`📁 Portfolio: http://localhost:${PORT}/api/v1/portfolio/user/my-portfolio`);
 });
 
 module.exports = app;

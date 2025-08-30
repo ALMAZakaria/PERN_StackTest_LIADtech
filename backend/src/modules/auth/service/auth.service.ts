@@ -27,7 +27,20 @@ export class AuthService {
   }
 
   async register(userData: RegisterDto): Promise<AuthResponse> {
-    const { name, email, password } = userData;
+    const { 
+      firstName, 
+      lastName, 
+      email, 
+      password, 
+      userType,
+      companyName,
+      industry,
+      companySize,
+      skills,
+      dailyRate,
+      availability,
+      experience
+    } = userData;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -41,42 +54,67 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Split name into firstName and lastName
-    const nameParts = name.trim().split(' ');
-    const firstName = nameParts[0];
-    const lastName = nameParts.slice(1).join(' ') || '';
+    // Create user with transaction to handle profile creation
+    const result = await prisma.$transaction(async (tx) => {
+      // Create user
+      const user = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          firstName,
+          lastName,
+          role: Role.USER,
+          userType: userType as any,
+        },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          userType: true,
+          isActive: true,
+          createdAt: true,
+        }
+      });
 
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        role: Role.USER, // Default role
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
+      // Create profile based on user type
+      if (userType === 'COMPANY' && companyName && industry && companySize) {
+        await tx.companyProfile.create({
+          data: {
+            userId: user.id,
+            companyName,
+            industry,
+            size: companySize as any,
+          }
+        });
+      } else if (userType === 'FREELANCER' && skills && dailyRate && availability && experience !== undefined) {
+        await tx.freelanceProfile.create({
+          data: {
+            userId: user.id,
+            skills,
+            dailyRate: new (tx as any).Prisma.Decimal(dailyRate),
+            availability,
+            experience,
+          }
+        });
       }
+
+      return user;
     });
 
     // Generate tokens
-    const { accessToken, refreshToken } = this.generateTokens(user.id, user.role);
+    const { accessToken, refreshToken } = this.generateTokens(result.id, result.role);
 
     return {
       user: {
-        id: user.id,
-        name: `${user.firstName} ${user.lastName}`.trim(),
-        email: user.email,
-        role: user.role,
-        isActive: user.isActive,
-        createdAt: user.createdAt,
+        id: result.id,
+        name: `${result.firstName} ${result.lastName}`.trim(),
+        email: result.email,
+        role: result.role,
+        userType: result.userType,
+        isActive: result.isActive,
+        createdAt: result.createdAt,
       },
       token: accessToken,
       refreshToken,
@@ -96,6 +134,7 @@ export class AuthService {
         firstName: true,
         lastName: true,
         role: true,
+        userType: true,
         isActive: true,
         createdAt: true,
       }
@@ -124,6 +163,7 @@ export class AuthService {
         name: `${user.firstName} ${user.lastName}`.trim(),
         email: user.email,
         role: user.role,
+        userType: user.userType,
         isActive: user.isActive,
         createdAt: user.createdAt,
       },

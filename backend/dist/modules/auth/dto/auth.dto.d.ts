@@ -1,66 +1,84 @@
 import { z } from 'zod';
 export declare const registerSchema: z.ZodObject<{
-    body: z.ZodObject<{
-        name: z.ZodString;
-        email: z.ZodString;
-        password: z.ZodString;
-    }, "strip", z.ZodTypeAny, {
-        name: string;
-        email: string;
-        password: string;
-    }, {
-        name: string;
-        email: string;
-        password: string;
-    }>;
+    firstName: z.ZodString;
+    lastName: z.ZodString;
+    email: z.ZodString;
+    password: z.ZodString;
+    userType: z.ZodEnum<["FREELANCER", "COMPANY"]>;
+    companyName: z.ZodOptional<z.ZodString>;
+    industry: z.ZodOptional<z.ZodString>;
+    companySize: z.ZodOptional<z.ZodEnum<["STARTUP", "SMALL", "MEDIUM", "LARGE", "ENTERPRISE"]>>;
+    skills: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    dailyRate: z.ZodOptional<z.ZodNumber>;
+    availability: z.ZodOptional<z.ZodNumber>;
+    experience: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    body: {
-        name: string;
-        email: string;
-        password: string;
-    };
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    userType: "FREELANCER" | "COMPANY";
+    skills?: string[] | undefined;
+    dailyRate?: number | undefined;
+    availability?: number | undefined;
+    experience?: number | undefined;
+    companyName?: string | undefined;
+    industry?: string | undefined;
+    companySize?: "STARTUP" | "SMALL" | "MEDIUM" | "LARGE" | "ENTERPRISE" | undefined;
 }, {
-    body: {
-        name: string;
-        email: string;
-        password: string;
-    };
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    userType: "FREELANCER" | "COMPANY";
+    skills?: string[] | undefined;
+    dailyRate?: number | undefined;
+    availability?: number | undefined;
+    experience?: number | undefined;
+    companyName?: string | undefined;
+    industry?: string | undefined;
+    companySize?: "STARTUP" | "SMALL" | "MEDIUM" | "LARGE" | "ENTERPRISE" | undefined;
 }>;
-export type RegisterDto = z.infer<typeof registerSchema>['body'];
 export declare const loginSchema: z.ZodObject<{
-    body: z.ZodObject<{
-        email: z.ZodString;
-        password: z.ZodString;
-    }, "strip", z.ZodTypeAny, {
-        email: string;
-        password: string;
-    }, {
-        email: string;
-        password: string;
-    }>;
+    email: z.ZodString;
+    password: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    body: {
-        email: string;
-        password: string;
-    };
+    email: string;
+    password: string;
 }, {
-    body: {
-        email: string;
-        password: string;
-    };
+    email: string;
+    password: string;
 }>;
-export type LoginDto = z.infer<typeof loginSchema>['body'];
+export interface RegisterDto {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    userType: 'FREELANCER' | 'COMPANY';
+    companyName?: string;
+    industry?: string;
+    companySize?: 'STARTUP' | 'SMALL' | 'MEDIUM' | 'LARGE' | 'ENTERPRISE';
+    skills?: string[];
+    dailyRate?: number;
+    availability?: number;
+    experience?: number;
+}
+export interface LoginDto {
+    email: string;
+    password: string;
+}
 export interface AuthResponse {
     user: {
         id: string;
         name: string;
         email: string;
         role: string;
+        userType: string;
         isActive: boolean;
         createdAt: Date;
     };
     token: string;
-    refreshToken?: string;
+    refreshToken: string;
 }
 export interface UserProfile {
     id: string;
