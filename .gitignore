@@ -7,3 +7,4 @@ npm-shrinkwrap.json
 *.gz
 *.env
 .env.backup
+.docker-compose.ymldocker-compose.yml
