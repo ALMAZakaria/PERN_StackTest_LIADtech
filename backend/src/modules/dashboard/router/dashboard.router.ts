@@ -34,11 +34,9 @@ const dashboardController = new DashboardController();
  *                       type: number
  *                     systemStatus:
  *                       type: string
- *                     totalFreelancers:
+ *                     totalProducts:
  *                       type: number
- *                     totalCompanies:
- *                       type: number
- *                     totalMissions:
+ *                     totalOrders:
  *                       type: number
  *       401:
  *         description: Unauthorized
