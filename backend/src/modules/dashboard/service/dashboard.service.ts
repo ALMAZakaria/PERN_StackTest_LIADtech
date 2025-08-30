@@ -7,8 +7,9 @@ export interface DashboardStatistics {
   activeUsers: number;
   newUsersToday: number;
   systemStatus: string;
-  totalProducts?: number;
-  totalOrders?: number;
+  totalFreelancers?: number;
+  totalCompanies?: number;
+  totalMissions?: number;
 }
 
 export interface RecentActivity {
@@ -27,8 +28,9 @@ export class DashboardService {
       totalUsers,
       activeUsers,
       newUsersToday,
-      totalProducts,
-      totalOrders
+      totalFreelancers,
+      totalCompanies,
+      totalMissions
     ] = await Promise.all([
       // Total users
       prisma.user.count(),
@@ -47,11 +49,14 @@ export class DashboardService {
         }
       }),
       
-      // Total products
-      prisma.product.count(),
+      // Total freelancers
+      prisma.freelanceProfile.count(),
       
-      // Total orders
-      prisma.order.count()
+      // Total companies
+      prisma.companyProfile.count(),
+      
+      // Total missions
+      prisma.mission.count()
     ]);
 
     return {
@@ -59,8 +64,9 @@ export class DashboardService {
       activeUsers,
       newUsersToday,
       systemStatus: 'online',
-      totalProducts,
-      totalOrders,
+      totalFreelancers,
+      totalCompanies,
+      totalMissions,
     };
   }
 

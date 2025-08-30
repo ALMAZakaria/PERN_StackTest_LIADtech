@@ -48,7 +48,7 @@ services:
       JWT_REFRESH_SECRET: dev-refresh-secret-key-change-in-production
       CORS_ORIGIN: http://localhost:3000
       SWAGGER_ENABLED: "true"
-      DATABASE_URL: postgresql://postgres.rgbrtekldiwlybfgpduq:Test_DB123456789Test_DB@aws-1-eu-west-3.pooler.supabase.com:5432/Test_DBpostgresql://postgres.rgbrtekldiwlybfgpduq:Test_DB123456789Test_DB@aws-1-eu-west-3.pooler.supabase.com:6543/Test_DB
+      DATABASE_URL: postgresql://postgres.rgbrtekldiwlybfgpduq:Test_DB123456789Test_DB@aws-1-eu-west-3.pooler.supabase.com:5432/Test_DB?schema=public
     ports:
       - "5000:5000"
     volumes:
