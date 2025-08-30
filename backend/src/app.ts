@@ -13,8 +13,6 @@ import { ResponseUtil } from './utils/response';
 
 // Import route modules
 import userRoutes from './modules/user/router';
-import productRoutes from './modules/product/router';
-import orderRoutes from './modules/order/router';
 import authRoutes from './modules/auth/router/auth.router';
 import dashboardRoutes from './modules/dashboard/router/dashboard.router';
 import freelanceRoutes from './modules/freelance/router/freelance.router';
@@ -73,8 +71,6 @@ const apiRouter = express.Router();
 apiRouter.use('/auth', authRoutes);
 apiRouter.use('/users', userRoutes);
 apiRouter.use('/dashboard', dashboardRoutes);
-apiRouter.use('/products', productRoutes);
-apiRouter.use('/orders', orderRoutes);
 apiRouter.use('/freelance', freelanceRoutes);
 apiRouter.use('/missions', missionRoutes);
 
