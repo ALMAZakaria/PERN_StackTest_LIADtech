@@ -21,7 +21,21 @@ app.use(cors({
   origin: 'http://localhost:3000',
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json({
+  limit: '10mb'
+}));
+
+// Handle JSON parsing errors
+app.use((err: any, req: Request, res: Response, next: any) => {
+  if (err instanceof SyntaxError && 'body' in err) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Invalid JSON format' 
+    });
+  }
+  next(err);
+  return;
+});
 
 // In-memory data store (for testing without database)
 const users: any[] = [
@@ -29,7 +43,7 @@ const users: any[] = [
     id: '1',
     name: 'Admin User',
     email: 'admin@demo.com',
-    password: '$2a$12$ali2ogGkaoKbmiRlRyqPFup6vbocp05a7mcZCJS9914rrp9sCgVTG', // demo123
+    password: '$2a$12$PxOcXjx.20exyTJ109UIvuJM/Azt3hiib2t4j215LzNewvhBKj9xa', // demo123
     role: 'admin',
     isActive: true,
     createdAt: new Date('2024-01-01'),
@@ -39,7 +53,7 @@ const users: any[] = [
     id: '2',
     name: 'John Doe',
     email: 'john@example.com',
-    password: '$2a$12$OZCoh9Jlp.6IsbH.bM/vauTAJRV.X6t5HHZCA78lyfliL8A1J0dpe', // demo123
+    password: '$2a$12$PxOcXjx.20exyTJ109UIvuJM/Azt3hiib2t4j215LzNewvhBKj9xa', // demo123
     role: 'user',
     isActive: true,
     createdAt: new Date('2024-01-15'),
@@ -49,7 +63,7 @@ const users: any[] = [
     id: '3',
     name: 'Jane Smith',
     email: 'jane@example.com',
-    password: '$2a$12$OZCoh9Jlp.6IsbH.bM/vauTAJRV.X6t5HHZCA78lyfliL8A1J0dpe', // demo123
+    password: '$2a$12$PxOcXjx.20exyTJ109UIvuJM/Azt3hiib2t4j215LzNewvhBKj9xa', // demo123
     role: 'user',
     isActive: true,
     createdAt: new Date('2024-01-14'),
@@ -361,4 +375,4 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-export { app }; 
+export default app; 

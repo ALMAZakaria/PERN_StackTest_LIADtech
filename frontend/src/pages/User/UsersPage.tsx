@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { User } from '../../services/api'
 
-interface User {
-  id: string;
+// Local interface for demo data that includes name
+interface DemoUser extends Omit<User, 'firstName' | 'lastName' | 'role'> {
   name: string;
-  email: string;
-  role: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  role: string; // Use string for demo data
 }
 
 const UsersPage: React.FC = () => {
@@ -21,12 +18,13 @@ const UsersPage: React.FC = () => {
   })
   
   // Demo users data
-  const [users, setUsers] = useState<User[]>([
+  const [users, setUsers] = useState<DemoUser[]>([
     {
       id: '1',
       name: 'Admin User',
       email: 'admin@demo.com',
-      role: 'admin',
+      role: 'admin' as string,
+      userType: 'FREELANCER' as any,
       isActive: true,
       createdAt: '2024-01-01',
       updatedAt: '2024-01-01'
@@ -35,7 +33,8 @@ const UsersPage: React.FC = () => {
       id: '2',
       name: 'John Doe',
       email: 'john@example.com',
-      role: 'user',
+      role: 'user' as string,
+      userType: 'FREELANCER' as any,
       isActive: true,
       createdAt: '2024-01-15',
       updatedAt: '2024-01-15'
@@ -44,7 +43,8 @@ const UsersPage: React.FC = () => {
       id: '3',
       name: 'Jane Smith',
       email: 'jane@example.com',
-      role: 'user',
+      role: 'user' as string,
+      userType: 'FREELANCER' as any,
       isActive: true,
       createdAt: '2024-01-14',
       updatedAt: '2024-01-14'
@@ -53,7 +53,8 @@ const UsersPage: React.FC = () => {
       id: '4',
       name: 'Mike Johnson',
       email: 'mike@example.com',
-      role: 'user',
+      role: 'user' as string,
+      userType: 'FREELANCER' as any,
       isActive: false,
       createdAt: '2024-01-13',
       updatedAt: '2024-01-13'
@@ -85,7 +86,13 @@ const UsersPage: React.FC = () => {
         role: roleFilter || undefined
       })
       
-      setUsers(response.users)
+      // Convert API users to demo format
+      const demoUsers: DemoUser[] = response.users.map(user => ({
+        ...user,
+        name: `${user.firstName} ${user.lastName}`,
+        role: user.role.toLowerCase() as string
+      }))
+      setUsers(demoUsers)
       setTotalPages(response.meta.totalPages)
       setIsBackendConnected(true)
       setError('')
@@ -126,17 +133,24 @@ const UsersPage: React.FC = () => {
         // Use real API
         const { userService } = await import('../../services/userService')
         const newUser = await userService.createUser(formData as any)
-        setUsers([newUser, ...users])
+        // Convert API user to demo format
+        const demoUser: DemoUser = {
+          ...newUser,
+          name: `${newUser.firstName} ${newUser.lastName}`,
+          role: newUser.role.toLowerCase() as string
+        }
+        setUsers([demoUser, ...users])
       } else {
         // Demo mode - create user locally
-        const newUser: User = {
+        const newUser: DemoUser = {
           id: String(users.length + 1),
           name: formData.name,
           email: formData.email,
-          role: formData.role,
+          role: formData.role as string,
           isActive: true,
           createdAt: new Date().toISOString().split('T')[0],
-          updatedAt: new Date().toISOString().split('T')[0]
+          updatedAt: new Date().toISOString().split('T')[0],
+          userType: 'FREELANCER' as any
         }
         setUsers([newUser, ...users])
       }

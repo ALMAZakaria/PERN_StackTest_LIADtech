@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { app } from './simple-api';
+import app from './simple-api';
 
 describe('PERN Stack API Tests', () => {
   let authToken: string;
@@ -459,7 +459,7 @@ describe('PERN Stack API Tests', () => {
         .expect(400);
 
       expect(response.body.success).toBe(false);
-      expect(response.body.message).toBe('Invalid JSON');
+      expect(response.body.message).toBe('Invalid JSON format');
     });
   });
 

@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { app } from '../simple-api';
+import app from '../simple-api';
 
 describe('Auth API', () => {
   describe('POST /api/v1/auth/register', () => {

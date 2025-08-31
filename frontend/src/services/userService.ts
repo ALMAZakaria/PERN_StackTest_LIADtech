@@ -47,16 +47,11 @@ class UserService {
       if (response.data.success && response.data.data) {
         return {
           users: response.data.data,
-          meta: response.data.meta || {
-            page: params.page || 1,
-            limit: params.limit || 20,
-            total: response.data.data.length,
-            totalPages: 1
-          } as {
-            page: number;
-            limit: number;
-            total: number;
-            totalPages: number;
+          meta: {
+            page: response.data.meta?.page || params.page || 1,
+            limit: response.data.meta?.limit || params.limit || 20,
+            total: response.data.meta?.total || response.data.data.length,
+            totalPages: response.data.meta?.totalPages || 1
           }
         };
       } else {
