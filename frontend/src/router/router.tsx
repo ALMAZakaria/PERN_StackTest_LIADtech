@@ -1,17 +1,18 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useAppSelector } from '../hooks/hooks'
 import SimpleDashboard from '../components/dashboard/SimpleDashboard'
 import UsersPage from '../pages/User/UsersPage'
 import LoginPage from '../pages/auth/LoginPage'
 import RegisterPage from '../pages/auth/RegisterPage'
+import MissionBoardPage from '../pages/missions/MissionBoardPage'
+import SkillBridgeDashboardPage from '../pages/dashboard/SkillBridgeDashboardPage'
 
 // Simple Home Page
 const HomePage = () => (
   <div className="min-h-screen flex items-center justify-center">
     <div className="text-center">
-      <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to PERN Stack</h1>
+      <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to SkillBridge Pro</h1>
       <p className="text-lg text-gray-600 mb-8">
-        A modern full-stack application with PostgreSQL, Express.js, React, and Node.js
+        Connect with top talent or find your next opportunity
       </p>
       <div className="space-y-4">
         <div className="space-x-4">
@@ -29,15 +30,15 @@ const HomePage = () => (
           </a>
         </div>
         <div className="pt-4 border-t border-gray-200">
-          <p className="text-sm text-gray-500 mb-3">Or preview the dashboard:</p>
+          <p className="text-sm text-gray-500 mb-3">Or explore the platform:</p>
           <a 
-            href="/demo" 
+            href="/missions" 
             className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200"
           >
             <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2-2V7a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 00-2 2h-2a2 2 0 00-2 2v6a2 2 0 01-2 2H9z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            View Demo Dashboard
+            Browse Missions
           </a>
         </div>
       </div>
@@ -65,6 +66,7 @@ const AppRouter = () => {
       <Route path="/" element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/missions" element={<MissionBoardPage />} />
       
       {/* Demo routes - no authentication required for testing */}
       <Route path="/demo" element={<SimpleDashboard />} />
@@ -75,7 +77,7 @@ const AppRouter = () => {
         path="/dashboard" 
         element={
           <ProtectedRoute>
-            <SimpleDashboard />
+            <SkillBridgeDashboardPage />
           </ProtectedRoute>
         } 
       />
@@ -84,6 +86,60 @@ const AppRouter = () => {
         element={
           <ProtectedRoute>
             <UsersPage />
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* SkillBridge Pro specific routes */}
+      <Route 
+        path="/missions/create" 
+        element={
+          <ProtectedRoute>
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Create Mission</h2>
+                <p className="text-gray-600">Mission creation form coming soon...</p>
+              </div>
+            </div>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/missions/:id" 
+        element={
+          <ProtectedRoute>
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Mission Details</h2>
+                <p className="text-gray-600">Mission details page coming soon...</p>
+              </div>
+            </div>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/applications" 
+        element={
+          <ProtectedRoute>
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Applications</h2>
+                <p className="text-gray-600">Applications management coming soon...</p>
+              </div>
+            </div>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute>
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Profile</h2>
+                <p className="text-gray-600">Profile management coming soon...</p>
+              </div>
+            </div>
           </ProtectedRoute>
         } 
       />

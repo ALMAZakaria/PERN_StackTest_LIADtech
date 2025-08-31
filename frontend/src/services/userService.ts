@@ -52,6 +52,11 @@ class UserService {
             limit: params.limit || 20,
             total: response.data.data.length,
             totalPages: 1
+          } as {
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
           }
         };
       } else {

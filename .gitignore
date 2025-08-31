@@ -8,3 +8,6 @@ npm-shrinkwrap.json
 *.env
 .env.backup
 .docker-compose.yml
+*.test.ts
+jest.setup.js
+jest.config.js

@@ -1,4 +1,4 @@
-import api, { ApiResponse, AuthResponse, User } from './api';
+import api, { ApiResponse, AuthResponse, User, UserType } from './api';
 
 export interface LoginCredentials {
   email: string;
@@ -6,9 +6,23 @@ export interface LoginCredentials {
 }
 
 export interface RegisterData {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
+  userType: UserType;
+  // Optional profile-specific fields
+  skills?: string[];
+  experience?: number;
+  dailyRate?: number;
+  availability?: string;
+  location?: string;
+  bio?: string;
+  companyName?: string;
+  industry?: string;
+  size?: string;
+  description?: string;
+  website?: string;
 }
 
 class AuthService {

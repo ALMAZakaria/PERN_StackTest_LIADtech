@@ -35,7 +35,7 @@ const SimpleDashboard: React.FC = () => {
     }
   ])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState('') // eslint-disable-line @typescript-eslint/no-unused-vars
   const [isBackendConnected, setIsBackendConnected] = useState(false)
 
   useEffect(() => {

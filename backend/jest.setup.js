@@ -8,7 +8,7 @@ process.env.JWT_REFRESH_EXPIRES_IN = '7d';
 
 // Database configuration - use test database if available, otherwise use fallback
 if (process.env.USE_TEST_DATABASE === 'true') {
-  process.env.DATABASE_URL = 'postgresql://postgres:123456789%40%40%40%40@localhost:5432/Test_DB?schema=public';
+  process.env.DATABASE_URL = 'postgresql://postgres.rgbrtekldiwlybfgpduq:Test_DB123456789Test_DB@aws-1-eu-west-3.pooler.supabase.com:5432/Test_DB';
   process.env.TEST_DATABASE = 'true';
 } else {
   // Use a dummy URL for tests that don't need database
