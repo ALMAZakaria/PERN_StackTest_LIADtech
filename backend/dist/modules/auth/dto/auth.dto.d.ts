@@ -1,4 +1,20 @@
 import { z } from 'zod';
+export declare const simpleRegisterSchema: z.ZodObject<{
+    firstName: z.ZodString;
+    lastName: z.ZodString;
+    email: z.ZodString;
+    password: z.ZodString;
+}, "strip", z.ZodTypeAny, {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+}, {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+}>;
 export declare const registerSchema: z.ZodObject<{
     firstName: z.ZodString;
     lastName: z.ZodString;
@@ -13,10 +29,10 @@ export declare const registerSchema: z.ZodObject<{
     availability: z.ZodOptional<z.ZodNumber>;
     experience: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
-    email: string;
-    password: string;
     firstName: string;
     lastName: string;
+    email: string;
+    password: string;
     userType: "FREELANCER" | "COMPANY";
     companyName?: string | undefined;
     industry?: string | undefined;
@@ -26,10 +42,10 @@ export declare const registerSchema: z.ZodObject<{
     availability?: number | undefined;
     experience?: number | undefined;
 }, {
-    email: string;
-    password: string;
     firstName: string;
     lastName: string;
+    email: string;
+    password: string;
     userType: "FREELANCER" | "COMPANY";
     companyName?: string | undefined;
     industry?: string | undefined;
@@ -49,6 +65,12 @@ export declare const loginSchema: z.ZodObject<{
     email: string;
     password: string;
 }>;
+export interface SimpleRegisterDto {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+}
 export interface RegisterDto {
     firstName: string;
     lastName: string;
@@ -70,10 +92,11 @@ export interface LoginDto {
 export interface AuthResponse {
     user: {
         id: string;
-        name: string;
+        firstName: string;
+        lastName: string;
         email: string;
         role: string;
-        userType: string;
+        userType?: string;
         isActive: boolean;
         createdAt: Date;
     };
@@ -82,7 +105,8 @@ export interface AuthResponse {
 }
 export interface UserProfile {
     id: string;
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     role: string;
     isActive: boolean;

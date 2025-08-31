@@ -9,6 +9,7 @@ export interface AuthRequest extends Request {
     id: string;
     email: string;
     role: string;
+    userType?: string;
   };
   token?: string;
 }
@@ -20,17 +21,29 @@ export const authenticateToken = async (
 ): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!authHeader) {
+      throw new AuthenticationError('Access token is required');
+    }
+
+    if (!authHeader.startsWith('Bearer ')) {
+      throw new AuthenticationError('Invalid authorization header format');
+    }
+
+    const token = authHeader.split(' ')[1];
 
     if (!token) {
       throw new AuthenticationError('Access token is required');
     }
 
     const decoded = jwt.verify(token, config.JWT_SECRET) as any;
+    
+    // Handle both old and new JWT payload structures
     req.user = {
-      id: decoded.id,
+      id: decoded.userId || decoded.id,
       email: decoded.email,
       role: decoded.role,
+      userType: decoded.userType,
     };
     req.token = token;
 
@@ -42,6 +55,10 @@ export const authenticateToken = async (
     }
     if (error instanceof jwt.TokenExpiredError) {
       ResponseUtil.unauthorized(res, 'Token expired');
+      return;
+    }
+    if (error instanceof AuthenticationError) {
+      ResponseUtil.unauthorized(res, error.message);
       return;
     }
     ResponseUtil.unauthorized(res, 'Authentication failed');
@@ -58,6 +75,30 @@ export const authorizeRoles = (...roles: string[]) => {
 
       if (!roles.includes(req.user.role)) {
         throw new AuthorizationError('Insufficient permissions');
+      }
+
+      next();
+    } catch (error) {
+      if (error instanceof AuthorizationError) {
+        ResponseUtil.forbidden(res, error.message);
+        return;
+      }
+      ResponseUtil.unauthorized(res, 'Authentication required');
+      return;
+    }
+  };
+};
+
+// Additional middleware for user type authorization
+export const authorizeUserTypes = (...userTypes: string[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+    try {
+      if (!req.user) {
+        throw new AuthenticationError('User not authenticated');
+      }
+
+      if (!req.user.userType || !userTypes.includes(req.user.userType)) {
+        throw new AuthorizationError('Insufficient permissions for this user type');
       }
 
       next();

@@ -4,6 +4,7 @@ export declare class UserController {
     private userService;
     private userCache;
     constructor();
+    simpleCreateUser: (req: Request, res: Response, next: NextFunction) => Promise<void>;
     register: (req: Request, res: Response, next: NextFunction) => Promise<void>;
     login: (req: Request, res: Response, next: NextFunction) => Promise<void>;
     refreshToken: (req: Request, res: Response, next: NextFunction) => Promise<void>;

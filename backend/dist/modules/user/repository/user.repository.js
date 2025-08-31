@@ -11,6 +11,17 @@ class UserRepository {
             data,
         });
     }
+    async createWithRole(data) {
+        return await prisma_1.default.user.create({
+            data: {
+                email: data.email,
+                password: data.password,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                role: data.role.toUpperCase(),
+            },
+        });
+    }
     async findById(id) {
         return await prisma_1.default.user.findUnique({
             where: { id },
@@ -79,23 +90,13 @@ class UserRepository {
             where: { id },
         });
     }
-    async exists(id) {
-        const user = await prisma_1.default.user.findUnique({
-            where: { id },
-            select: { id: true },
-        });
-        return !!user;
-    }
     async existsByEmail(email, excludeId) {
         const where = { email };
         if (excludeId) {
             where.NOT = { id: excludeId };
         }
-        const user = await prisma_1.default.user.findFirst({
-            where,
-            select: { id: true },
-        });
-        return !!user;
+        const count = await prisma_1.default.user.count({ where });
+        return count > 0;
     }
 }
 exports.UserRepository = UserRepository;

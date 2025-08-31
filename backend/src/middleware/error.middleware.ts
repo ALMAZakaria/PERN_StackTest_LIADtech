@@ -4,7 +4,7 @@ import { ZodError } from 'zod';
 import logger from '../utils/logger';
 import { config } from '../config/server';
 import { ResponseUtil } from '../utils/response';
-import { AppError } from '../utils/AppError';
+import { AppError } from '../utils/error-handler';
 
 export const errorHandler = (
   error: Error,
@@ -20,6 +20,12 @@ export const errorHandler = (
     ip: req.ip,
     userAgent: req.get('User-Agent'),
   });
+
+  // Handle JSON parsing errors
+  if (error instanceof SyntaxError && 'body' in error) {
+    res.status(400).json({ success: false, message: 'Invalid JSON format' });
+    return;
+  }
 
   // Handle known operational errors
   if (error instanceof AppError) {

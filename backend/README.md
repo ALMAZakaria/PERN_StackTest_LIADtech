@@ -1,335 +1,284 @@
 # PERN Stack Backend
 
-Express.js backend with TypeScript, PostgreSQL, Redis, and comprehensive API documentation.
+A robust, production-ready backend API built with Express.js, TypeScript, Prisma ORM, and PostgreSQL.
 
-## 🚀 Quick Start
+## 🚀 Features
 
+- **Authentication & Authorization**: JWT-based authentication with role-based access control
+- **Database Integration**: Prisma ORM with PostgreSQL
+- **API Documentation**: Swagger/OpenAPI documentation
+- **Security**: Helmet, CORS, rate limiting, input validation
+- **Logging**: Winston logger with file and console output
+- **Error Handling**: Comprehensive error handling middleware
+- **Testing**: Jest testing framework with supertest
+- **TypeScript**: Full TypeScript support with strict type checking
+
+## 📋 Prerequisites
+
+- Node.js (v16 or higher)
+- PostgreSQL (v12 or higher)
+- Redis (optional, for caching)
+
+## 🛠️ Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd backend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Setup**
+   ```bash
+   # Copy the example environment file
+   cp .env.example .env
+   
+   # Edit .env with your configuration
+   nano .env
+   ```
+
+4. **Database Setup**
+   ```bash
+   # Generate Prisma client
+   npm run prisma:generate
+   
+   # Run database migrations
+   npm run prisma:migrate
+   
+   # Setup demo data
+   npm run db:setup
+   ```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+Create a `.env` file in the backend directory:
+
+```env
+# Server Configuration
+NODE_ENV=development
+PORT=5000
+API_VERSION=v1
+
+# Database Configuration
+DATABASE_URL="postgresql://username:password@localhost:5432/skillbridge_db"
+
+# Redis Configuration (optional)
+REDIS_URL=redis://localhost:6379
+REDIS_PASSWORD=
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+JWT_EXPIRES_IN=7d
+JWT_REFRESH_SECRET=your-super-secret-refresh-key-change-this-in-production
+JWT_REFRESH_EXPIRES_IN=30d
+
+# CORS Configuration
+CORS_ORIGIN=http://localhost:3000
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+
+# Logging
+LOG_LEVEL=info
+LOG_FILE=./logs/app.log
+
+# API Documentation
+SWAGGER_ENABLED=true
+
+# Security
+BCRYPT_ROUNDS=12
+```
+
+## 🚀 Running the Application
+
+### Development Mode
 ```bash
-# Install dependencies
-npm install
-
-# Setup environment
-cp .env.example .env
-# Edit .env with your database credentials
-
-# Setup database
-npm run prisma:generate
-npm run prisma:migrate
-npm run prisma:seed
-
-# Start development server
 npm run dev
 ```
 
-## 📁 Architecture
-
-This backend follows a modular architecture pattern with clean separation of concerns:
-
-```
-src/
-├── modules/
-│   ├── user/
-│   │   ├── controller/     # HTTP request handlers
-│   │   ├── service/        # Business logic
-│   │   ├── repository/     # Data access layer
-│   │   ├── dto/           # Data transfer objects
-│   │   ├── router/        # Route definitions
-│   │   ├── cache/         # Redis caching logic
-│   │   └── validators/    # Input validation
-│   ├── product/
-│   └── order/
-├── middleware/            # Express middleware
-├── utils/                # Utility functions
-├── app.ts               # Express app setup
-└── server.ts           # Server entry point
+### Production Mode
+```bash
+npm run build
+npm start
 ```
 
-## 🔌 API Endpoints
-
-### Authentication
-
-- `POST /api/v1/users/register` - Register new user
-- `POST /api/v1/users/login` - User login
-- `POST /api/v1/users/refresh-token` - Refresh access token
-
-### User Management
-
-- `GET /api/v1/users/profile` - Get user profile
-- `PUT /api/v1/users/profile` - Update user profile
-- `POST /api/v1/users/change-password` - Change password
-- `GET /api/v1/users/check-email` - Check email availability
-
-### Admin Endpoints
-
-- `GET /api/v1/users` - Get all users (Admin only)
-- `GET /api/v1/users/:id` - Get user by ID (Admin only)
-- `DELETE /api/v1/users/:id` - Delete user (Admin only)
-
-### Utility
-
-- `GET /health` - Health check
-- `GET /api-docs` - Swagger documentation
-
-## 🔒 Authentication & Authorization
-
-The API uses JWT tokens for authentication:
-
-1. **Access Token**: Short-lived (7 days by default)
-2. **Refresh Token**: Long-lived (30 days by default)
-
-### Protected Routes
-
-Include the access token in the Authorization header:
-
-```
-Authorization: Bearer <access_token>
+### Simple API Mode (Legacy)
+```bash
+npm run dev:simple
 ```
 
-### Role-Based Access Control
+## 📚 API Documentation
 
-- **USER**: Standard user permissions
-- **ADMIN**: Full access to all resources
+Once the server is running, you can access the API documentation at:
+- **Swagger UI**: `http://localhost:5000/api-docs`
+- **Health Check**: `http://localhost:5000/health`
 
-## 📝 Request/Response Format
+## 🔐 Authentication
 
-### Standard Response Format
+The API uses JWT (JSON Web Tokens) for authentication. Include the token in the Authorization header:
 
-```json
-{
-  "success": boolean,
-  "message": string,
-  "data": object | null,
-  "meta": {
-    "page": number,
-    "limit": number,
-    "total": number,
-    "totalPages": number
-  }
-}
+```
+Authorization: Bearer <your-jwt-token>
 ```
 
-### Error Response Format
-
-```json
-{
-  "success": false,
-  "message": string,
-  "error": string | null
-}
-```
+### Demo Credentials
+- **Admin**: `admin@demo.com` / `demo123`
+- **Freelancer**: `john@example.com` / `demo123`
+- **Company**: `techcorp@example.com` / `demo123`
 
 ## 🗄️ Database Schema
 
-### User Model
+The application uses Prisma ORM with the following main entities:
 
-```prisma
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  firstName String
-  lastName  String
-  role      Role     @default(USER)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  orders    Order[]
-}
-```
+- **User**: Core user information and authentication
+- **FreelanceProfile**: Freelancer-specific profile data
+- **CompanyProfile**: Company-specific profile data
+- **Mission**: Job postings by companies
+- **Application**: Freelancer applications for missions
+- **Rating**: User ratings and reviews
+- **PortfolioProject**: Freelancer portfolio projects
 
-### Product Model
+## 🔄 Migration from Simple API
 
-```prisma
-model Product {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  price       Decimal  @db.Decimal(10, 2)
-  stock       Int      @default(0)
-  imageUrl    String?
-  category    String
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  orderItems  OrderItem[]
-}
-```
+### What Changed
 
-### Order Model
+1. **Database Integration**: Replaced in-memory data with PostgreSQL database
+2. **Authentication**: Enhanced JWT implementation with refresh tokens
+3. **Middleware**: Improved security and validation middleware
+4. **Error Handling**: Comprehensive error handling with proper HTTP status codes
+5. **Logging**: Structured logging with Winston
 
-```prisma
-model Order {
-  id          String      @id @default(cuid())
-  userId      String
-  status      OrderStatus @default(PENDING)
-  totalAmount Decimal     @db.Decimal(10, 2)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  user        User        @relation(fields: [userId], references: [id])
-  orderItems  OrderItem[]
-}
-```
+### Migration Steps
 
-## 🚦 Error Handling
+1. **Stop the simple API server**
+   ```bash
+   # If running simple API
+   npm run dev:simple
+   ```
 
-The API uses custom error classes for consistent error handling:
+2. **Setup database**
+   ```bash
+   npm run db:setup
+   ```
 
-- `ValidationError` (400) - Input validation failed
-- `AuthenticationError` (401) - Authentication required
-- `AuthorizationError` (403) - Insufficient permissions
-- `NotFoundError` (404) - Resource not found
-- `ConflictError` (409) - Resource conflict
-- `DatabaseError` (500) - Database operation failed
+3. **Start the main server**
+   ```bash
+   npm run dev
+   ```
 
-## 📊 Logging
-
-Structured logging with Winston:
-
-```typescript
-logger.info('User logged in', { userId, email });
-logger.error('Database connection failed', { error });
-```
-
-Log levels: `error`, `warn`, `info`, `debug`
-
-## 🔄 Caching
-
-Redis caching is implemented for:
-
-- User profiles
-- User lists with pagination
-- Authentication tokens (blacklisting)
-
-Cache TTL: 1 hour by default
+4. **Update frontend API endpoints** (if needed)
+   - The API structure remains the same
+   - Authentication tokens are now more secure
+   - Response format is consistent
 
 ## 🧪 Testing
 
+### Run Tests
 ```bash
 # Run all tests
 npm test
 
+# Run tests in watch mode
+npm run test:watch
+
 # Run tests with coverage
 npm run test:coverage
 
-# Run tests in watch mode
-npm run test:watch
+# Run specific test suites
+npm run test:auth
+npm run test:api
 ```
 
-Test structure:
-- Unit tests for services and utilities
-- Integration tests for API endpoints
-- Test database isolation
+### Test Structure
+- `src/tests/`: Test files
+- `src/simple-api.test.ts`: Simple API tests
+- `jest.config.js`: Jest configuration
 
-## 📈 Performance
+## 📁 Project Structure
 
-### Optimizations Implemented
+```
+src/
+├── app.ts                 # Main application setup
+├── server.ts             # Server entry point
+├── config/               # Configuration files
+│   ├── server.ts         # Server configuration
+│   ├── prisma.ts         # Prisma client setup
+│   └── redis.ts          # Redis client setup
+├── middleware/           # Express middleware
+│   ├── auth.middleware.ts    # Authentication middleware
+│   ├── error.middleware.ts   # Error handling middleware
+│   ├── logger.middleware.ts  # Logging middleware
+│   └── validation.middleware.ts # Request validation
+├── modules/              # Feature modules
+│   ├── auth/             # Authentication module
+│   ├── user/             # User management
+│   ├── mission/          # Mission management
+│   ├── application/      # Application management
+│   └── ...               # Other modules
+├── utils/                # Utility functions
+│   ├── response.ts       # Response utilities
+│   ├── logger.ts         # Logging utilities
+│   └── AppError.ts       # Custom error classes
+└── tests/                # Test files
+```
 
-- Database query optimization with Prisma
-- Redis caching for frequently accessed data
-- Connection pooling
-- Request rate limiting
-- Compression middleware
-- Efficient pagination
+## 🔒 Security Features
 
-### Monitoring
+- **Helmet**: Security headers
+- **CORS**: Cross-origin resource sharing
+- **Rate Limiting**: Request rate limiting
+- **Input Validation**: Zod schema validation
+- **JWT Security**: Secure token handling
+- **SQL Injection Protection**: Prisma ORM
+- **XSS Protection**: Input sanitization
 
-- Request logging with Morgan
-- Error tracking with Winston
-- Health check endpoint
-- Performance metrics
+## 📊 Monitoring & Logging
 
-## 🔧 Development Tools
-
-### Code Quality
-
-- **ESLint**: TypeScript linting
-- **Prettier**: Code formatting
-- **Husky**: Git hooks for pre-commit checks
-
-### Database Tools
-
-- **Prisma Studio**: Visual database browser
-- **Prisma Migrate**: Database migration management
-- **Database Seeding**: Sample data for development
-
-### API Documentation
-
-- **Swagger/OpenAPI**: Interactive API documentation
-- **JSDoc**: Code documentation
+- **Request Logging**: All requests are logged with timing
+- **Error Logging**: Comprehensive error tracking
+- **Security Logging**: Suspicious activity detection
+- **File Logs**: Logs stored in `logs/` directory
 
 ## 🚀 Deployment
 
-### Environment Variables for Production
-
-```env
-NODE_ENV=production
-PORT=5000
-DATABASE_URL=your_production_database_url
-REDIS_URL=your_production_redis_url
-JWT_SECRET=your_super_secure_jwt_secret
-CORS_ORIGIN=your_frontend_domain
-LOG_LEVEL=warn
-SWAGGER_ENABLED=false
-```
-
-### Build Commands
-
+### Docker Deployment
 ```bash
-# Build TypeScript
-npm run build
+# Build Docker image
+docker build -t pern-backend .
 
-# Start production server
-npm start
+# Run container
+docker run -p 5000:5000 pern-backend
 ```
 
-### Health Monitoring
+### Environment Variables for Production
+- Set `NODE_ENV=production`
+- Use strong JWT secrets
+- Configure proper CORS origins
+- Set up database connection pooling
+- Configure Redis for caching (optional)
 
-Monitor these endpoints in production:
+## 🤝 Contributing
 
-- `GET /health` - Application health
-- Check logs for errors and performance metrics
-- Monitor database connection pool
-- Monitor Redis connection status
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
-## 🔐 Security Checklist
+## 📄 License
 
-- [x] Input validation with Zod
-- [x] SQL injection prevention with Prisma
-- [x] Password hashing with bcrypt
-- [x] JWT token security
-- [x] Rate limiting
-- [x] CORS configuration
-- [x] Security headers with Helmet
-- [x] Error message sanitization
-- [x] Environment variable validation
+This project is licensed under the MIT License.
 
-## 📚 Additional Resources
+## 🆘 Support
 
-- [Prisma Documentation](https://www.prisma.io/docs/)
-- [Express.js Documentation](https://expressjs.com/)
-- [Redis Documentation](https://redis.io/documentation)
-- [JWT Best Practices](https://tools.ietf.org/html/rfc7519)
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Failed**
-   - Check DATABASE_URL in .env
-   - Ensure PostgreSQL is running
-   - Verify credentials and database exists
-
-2. **Redis Connection Failed**
-   - Check REDIS_URL in .env
-   - Ensure Redis is running
-   - Check Redis authentication if required
-
-3. **JWT Token Issues**
-   - Verify JWT_SECRET is set
-   - Check token expiration
-   - Ensure proper Authorization header format
-
-4. **Migration Issues**
-   - Run `npm run prisma:generate` first
-   - Check database permissions
-   - Verify Prisma schema syntax 
+For support and questions:
+- Create an issue in the repository
+- Check the API documentation
+- Review the test files for usage examples 

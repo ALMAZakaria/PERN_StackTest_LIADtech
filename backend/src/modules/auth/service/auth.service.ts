@@ -1,15 +1,21 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaClient, Role } from '@prisma/client';
-import { RegisterDto, LoginDto, AuthResponse } from '../dto/auth.dto';
+import { RegisterDto, LoginDto, AuthResponse, SimpleRegisterDto } from '../dto/auth.dto';
 import { AppError } from '../../../utils/AppError';
 import { config } from '../../../config/server';
+import { ConflictError } from '../../../utils/error-handler';
 
 const prisma = new PrismaClient();
 
 export class AuthService {
-  private generateTokens(userId: string, role: Role) {
-    const payload = { userId, role: role.toString() };
+  private generateTokens(userId: string, role: Role, email: string, userType?: string) {
+    const payload = { 
+      userId, 
+      email,
+      role: role.toString(),
+      userType: userType || 'FREELANCER'
+    };
     
     const accessToken = jwt.sign(
       payload,
@@ -24,6 +30,72 @@ export class AuthService {
     );
 
     return { accessToken, refreshToken };
+  }
+
+  async simpleRegister(userData: SimpleRegisterDto): Promise<AuthResponse> {
+    const { firstName, lastName, email, password } = userData;
+    
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      throw new ConflictError('User already exists');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, config.BCRYPT_ROUNDS);
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        role: Role.USER,
+        userType: 'FREELANCER'
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        userType: true,
+        isActive: true,
+        createdAt: true
+      }
+    });
+
+    // Generate tokens
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      config.JWT_SECRET,
+      { expiresIn: config.JWT_EXPIRES_IN }
+    );
+
+    const refreshToken = jwt.sign(
+      { userId: user.id },
+      config.JWT_REFRESH_SECRET,
+      { expiresIn: config.JWT_REFRESH_EXPIRES_IN }
+    );
+
+    return {
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        userType: user.userType,
+        isActive: user.isActive,
+        createdAt: user.createdAt
+      },
+      token,
+      refreshToken
+    };
   }
 
   async register(userData: RegisterDto): Promise<AuthResponse> {
@@ -104,12 +176,13 @@ export class AuthService {
     });
 
     // Generate tokens
-    const { accessToken, refreshToken } = this.generateTokens(result.id, result.role);
+    const { accessToken, refreshToken } = this.generateTokens(result.id, result.role, result.email, result.userType);
 
     return {
       user: {
         id: result.id,
-        name: `${result.firstName} ${result.lastName}`.trim(),
+        firstName: result.firstName,
+        lastName: result.lastName,
         email: result.email,
         role: result.role,
         userType: result.userType,
@@ -155,12 +228,13 @@ export class AuthService {
     }
 
     // Generate tokens
-    const { accessToken, refreshToken } = this.generateTokens(user.id, user.role);
+    const { accessToken, refreshToken } = this.generateTokens(user.id, user.role, user.email, user.userType);
 
     return {
       user: {
         id: user.id,
-        name: `${user.firstName} ${user.lastName}`.trim(),
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         role: user.role,
         userType: user.userType,

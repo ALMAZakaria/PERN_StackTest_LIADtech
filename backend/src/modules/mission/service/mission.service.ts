@@ -166,7 +166,8 @@ export class MissionService {
     const companyProfile = await companyRepository.findByUserId(userId);
     
     if (!companyProfile) {
-      throw new AppError('Company profile not found', 404);
+      // Return empty array if no company profile exists
+      return [];
     }
 
     return this.missionRepository.findByCompanyId(companyProfile.id);

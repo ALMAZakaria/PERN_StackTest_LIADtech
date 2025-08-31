@@ -9,6 +9,7 @@ import {
   UpdateUserDto,
   ChangePasswordDto,
   GetUsersQueryDto,
+  SimpleCreateUserDto,
 } from '../dto/user.dto';
 
 export class UserController {
@@ -19,6 +20,18 @@ export class UserController {
     this.userService = new UserService();
     this.userCache = new UserCache();
   }
+
+  // Simple user creation for tests
+  simpleCreateUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userData: SimpleCreateUserDto = req.body;
+      const newUser = await this.userService.simpleCreateUser(userData);
+
+      ResponseUtil.created(res, newUser, 'User created successfully');
+    } catch (error) {
+      next(error);
+    }
+  };
 
   // Authentication endpoints
   register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

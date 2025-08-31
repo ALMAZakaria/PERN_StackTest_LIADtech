@@ -85,7 +85,7 @@ class SkillBridgeService {
   }
 
   async getCompanyMissions(): Promise<Mission[]> {
-    const response = await api.get<ApiResponse<Mission[]>>('/missions/company');
+    const response = await api.get<ApiResponse<Mission[]>>('/missions/company/my-missions');
     return response.data.data!;
   }
 
@@ -203,7 +203,7 @@ class SkillBridgeService {
     earnings?: number;
     postedMissions?: number;
   }> {
-    const response = await api.get<ApiResponse<any>>('/dashboard/stats');
+    const response = await api.get<ApiResponse<any>>('/dashboard/statistics');
     return response.data.data!;
   }
 }

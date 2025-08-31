@@ -1,5 +1,9 @@
 import api, { ApiResponse, AuthResponse, User, UserType } from './api';
 
+// Import store to dispatch actions
+import { store } from '../state/store';
+import { setUser, clearAuth } from '../state/slices/slice';
+
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -32,12 +36,16 @@ class AuthService {
       const response = await api.post<ApiResponse<AuthResponse>>('/auth/login', credentials);
       
       if (response.data.success && response.data.data) {
-        const { user, token } = response.data.data;
+        const { user, token, refreshToken } = response.data.data;
         
-        // Store user data and token in localStorage
+        // Store user data and tokens in localStorage
         localStorage.setItem('token', token);
+        localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('isAuthenticated', 'true');
+        
+        // Update Redux state
+        store.dispatch(setUser({ user, token }));
         
         return response.data.data;
       } else {
@@ -52,15 +60,26 @@ class AuthService {
   // Register new user
   async register(userData: RegisterData): Promise<AuthResponse> {
     try {
-      const response = await api.post<ApiResponse<AuthResponse>>('/auth/register', userData);
+      // Use simple registration endpoint (saves to database)
+      const simpleUserData = {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        password: userData.password
+      };
+      const response = await api.post<ApiResponse<AuthResponse>>('/auth/register', simpleUserData);
       
       if (response.data.success && response.data.data) {
-        const { user, token } = response.data.data;
+        const { user, token, refreshToken } = response.data.data;
         
-        // Store user data and token in localStorage
+        // Store user data and tokens in localStorage
         localStorage.setItem('token', token);
+        localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('isAuthenticated', 'true');
+        
+        // Update Redux state
+        store.dispatch(setUser({ user, token }));
         
         return response.data.data;
       } else {
@@ -81,8 +100,12 @@ class AuthService {
     } finally {
       // Clear local storage regardless of API call success
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
       localStorage.removeItem('isAuthenticated');
+      
+      // Update Redux state
+      store.dispatch(clearAuth());
     }
   }
 
@@ -109,9 +132,15 @@ class AuthService {
     return localStorage.getItem('token');
   }
 
+  // Get stored refresh token
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
+  }
+
   // Clear all auth data
   clearAuthData(): void {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     localStorage.removeItem('isAuthenticated');
   }

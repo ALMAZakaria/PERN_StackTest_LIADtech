@@ -20,6 +20,8 @@
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
     "db:seed": "npm run prisma:seed",
+    "db:setup": "node scripts/setup-database.js",
+    "db:reset": "prisma migrate reset --force && npm run db:setup",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts"
@@ -31,6 +33,9 @@
     "postgresql",
     "redis"
   ],
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {

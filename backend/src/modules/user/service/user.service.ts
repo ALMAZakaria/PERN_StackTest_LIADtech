@@ -10,6 +10,7 @@ import {
   ChangePasswordDto,
   GetUsersQueryDto,
   UserResponseDto,
+  SimpleCreateUserDto,
 } from '../dto/user.dto';
 import {
   NotFoundError,
@@ -23,6 +24,28 @@ export class UserService {
 
   constructor() {
     this.userRepository = new UserRepository();
+  }
+
+  async simpleCreateUser(userData: SimpleCreateUserDto): Promise<UserResponseDto> {
+    // Check if user already exists
+    const existingUser = await this.userRepository.findByEmail(userData.email);
+    if (existingUser) {
+      throw new ConflictError('User with this email already exists');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(userData.password, config.BCRYPT_ROUNDS);
+
+    // Create user
+    const user = await this.userRepository.createWithRole({
+      email: userData.email,
+      password: hashedPassword,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      role: userData.role,
+    });
+
+    return this.mapToResponseDto(user);
   }
 
   async register(userData: CreateUserDto): Promise<{
@@ -217,7 +240,7 @@ export class UserService {
 
   private generateTokens(user: User): { accessToken: string; refreshToken: string } {
     const payload = {
-      id: user.id,
+      userId: user.id,
       email: user.email,
       role: user.role,
     };

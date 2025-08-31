@@ -1,19 +1,39 @@
 import { z } from 'zod';
+export declare const simpleCreateUserSchema: z.ZodObject<{
+    firstName: z.ZodString;
+    lastName: z.ZodString;
+    email: z.ZodString;
+    password: z.ZodString;
+    role: z.ZodDefault<z.ZodEnum<["user", "admin", "moderator"]>>;
+}, "strip", z.ZodTypeAny, {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    role: "user" | "admin" | "moderator";
+}, {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    role?: "user" | "admin" | "moderator" | undefined;
+}>;
+export type SimpleCreateUserDto = z.infer<typeof simpleCreateUserSchema>;
 export declare const createUserSchema: z.ZodObject<{
     email: z.ZodString;
     password: z.ZodString;
     firstName: z.ZodString;
     lastName: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    email: string;
-    password: string;
     firstName: string;
     lastName: string;
+    email: string;
+    password: string;
 }, {
-    email: string;
-    password: string;
     firstName: string;
     lastName: string;
+    email: string;
+    password: string;
 }>;
 export type CreateUserDto = z.infer<typeof createUserSchema>;
 export declare const loginUserSchema: z.ZodObject<{
@@ -32,13 +52,13 @@ export declare const updateUserSchema: z.ZodObject<{
     lastName: z.ZodOptional<z.ZodString>;
     email: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    email?: string | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
+    email?: string | undefined;
 }, {
-    email?: string | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
+    email?: string | undefined;
 }>;
 export type UpdateUserDto = z.infer<typeof updateUserSchema>;
 export declare const changePasswordSchema: z.ZodObject<{
@@ -60,15 +80,15 @@ export declare const getUsersQuerySchema: z.ZodObject<{
     isActive: z.ZodOptional<z.ZodEffects<z.ZodString, boolean, string>>;
 }, "strip", z.ZodTypeAny, {
     search?: string | undefined;
+    role?: "USER" | "ADMIN" | undefined;
     page?: number | undefined;
     limit?: number | undefined;
-    role?: "USER" | "ADMIN" | undefined;
     isActive?: boolean | undefined;
 }, {
     search?: string | undefined;
+    role?: "USER" | "ADMIN" | undefined;
     page?: string | undefined;
     limit?: string | undefined;
-    role?: "USER" | "ADMIN" | undefined;
     isActive?: string | undefined;
 }>;
 export type GetUsersQueryDto = z.infer<typeof getUsersQuerySchema>;

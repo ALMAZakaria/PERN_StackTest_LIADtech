@@ -1,14 +1,16 @@
 import api, { ApiResponse, User } from './api';
 
 export interface CreateUserData {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   role: 'user' | 'admin' | 'moderator';
 }
 
 export interface UpdateUserData {
-  name?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   role?: string;
   isActive?: boolean;

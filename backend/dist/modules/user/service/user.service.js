@@ -13,6 +13,21 @@ class UserService {
     constructor() {
         this.userRepository = new user_repository_1.UserRepository();
     }
+    async simpleCreateUser(userData) {
+        const existingUser = await this.userRepository.findByEmail(userData.email);
+        if (existingUser) {
+            throw new error_handler_1.ConflictError('User with this email already exists');
+        }
+        const hashedPassword = await bcryptjs_1.default.hash(userData.password, server_1.config.BCRYPT_ROUNDS);
+        const user = await this.userRepository.createWithRole({
+            email: userData.email,
+            password: hashedPassword,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            role: userData.role,
+        });
+        return this.mapToResponseDto(user);
+    }
     async register(userData) {
         const existingUser = await this.userRepository.findByEmail(userData.email);
         if (existingUser) {
@@ -135,7 +150,7 @@ class UserService {
     }
     generateTokens(user) {
         const payload = {
-            id: user.id,
+            userId: user.id,
             email: user.email,
             role: user.role,
         };

@@ -9,6 +9,7 @@ import {
   changePasswordSchema,
   getUsersQuerySchema,
   userIdParamSchema,
+  simpleCreateUserSchema,
 } from '../dto/user.dto';
 
 const router = Router();
@@ -407,7 +408,7 @@ router.get('/',
  *                 minLength: 6
  *               role:
  *                 type: string
- *                 enum: [USER, ADMIN]
+ *                 enum: [user, admin, moderator]
  *     responses:
  *       201:
  *         description: User created successfully
@@ -421,8 +422,8 @@ router.get('/',
 router.post('/create',
   authenticateToken,
   authorizeRoles('ADMIN'),
-  validateRequest({ body: createUserSchema }),
-  userController.createUser
+  validateRequest({ body: simpleCreateUserSchema }),
+  userController.simpleCreateUser
 );
 
 /**

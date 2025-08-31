@@ -124,7 +124,7 @@ class ApplicationService {
             return this.applicationRepository.findByCompanyId(userId);
         }
         else {
-            throw new AppError_1.AppError('User profile not found', 404);
+            return [];
         }
     }
     async getMissionApplications(missionId, userId) {

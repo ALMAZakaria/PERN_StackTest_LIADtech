@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.authorizeRoles = exports.authenticateToken = void 0;
+exports.authorizeUserTypes = exports.authorizeRoles = exports.authenticateToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const server_1 = require("../config/server");
 const error_handler_1 = require("../utils/error-handler");
@@ -11,15 +11,22 @@ const response_1 = require("../utils/response");
 const authenticateToken = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
-        const token = authHeader && authHeader.split(' ')[1];
+        if (!authHeader) {
+            throw new error_handler_1.AuthenticationError('Access token is required');
+        }
+        if (!authHeader.startsWith('Bearer ')) {
+            throw new error_handler_1.AuthenticationError('Invalid authorization header format');
+        }
+        const token = authHeader.split(' ')[1];
         if (!token) {
             throw new error_handler_1.AuthenticationError('Access token is required');
         }
         const decoded = jsonwebtoken_1.default.verify(token, server_1.config.JWT_SECRET);
         req.user = {
-            id: decoded.id,
+            id: decoded.userId || decoded.id,
             email: decoded.email,
             role: decoded.role,
+            userType: decoded.userType,
         };
         req.token = token;
         next();
@@ -31,6 +38,10 @@ const authenticateToken = async (req, res, next) => {
         }
         if (error instanceof jsonwebtoken_1.default.TokenExpiredError) {
             response_1.ResponseUtil.unauthorized(res, 'Token expired');
+            return;
+        }
+        if (error instanceof error_handler_1.AuthenticationError) {
+            response_1.ResponseUtil.unauthorized(res, error.message);
             return;
         }
         response_1.ResponseUtil.unauthorized(res, 'Authentication failed');
@@ -60,4 +71,26 @@ const authorizeRoles = (...roles) => {
     };
 };
 exports.authorizeRoles = authorizeRoles;
+const authorizeUserTypes = (...userTypes) => {
+    return (req, res, next) => {
+        try {
+            if (!req.user) {
+                throw new error_handler_1.AuthenticationError('User not authenticated');
+            }
+            if (!req.user.userType || !userTypes.includes(req.user.userType)) {
+                throw new error_handler_1.AuthorizationError('Insufficient permissions for this user type');
+            }
+            next();
+        }
+        catch (error) {
+            if (error instanceof error_handler_1.AuthorizationError) {
+                response_1.ResponseUtil.forbidden(res, error.message);
+                return;
+            }
+            response_1.ResponseUtil.unauthorized(res, 'Authentication required');
+            return;
+        }
+    };
+};
+exports.authorizeUserTypes = authorizeUserTypes;
 //# sourceMappingURL=auth.middleware.js.map

@@ -6,6 +6,16 @@ const user_cache_1 = require("../cache/user.cache");
 const response_1 = require("../../../utils/response");
 class UserController {
     constructor() {
+        this.simpleCreateUser = async (req, res, next) => {
+            try {
+                const userData = req.body;
+                const newUser = await this.userService.simpleCreateUser(userData);
+                response_1.ResponseUtil.created(res, newUser, 'User created successfully');
+            }
+            catch (error) {
+                next(error);
+            }
+        };
         this.register = async (req, res, next) => {
             try {
                 const userData = req.body;

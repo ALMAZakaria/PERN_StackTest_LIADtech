@@ -147,7 +147,7 @@ class MissionService {
         const companyRepository = new CompanyRepository();
         const companyProfile = await companyRepository.findByUserId(userId);
         if (!companyProfile) {
-            throw new AppError_1.AppError('Company profile not found', 404);
+            return [];
         }
         return this.missionRepository.findByCompanyId(companyProfile.id);
     }

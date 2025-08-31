@@ -9,13 +9,65 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const client_1 = require("@prisma/client");
 const AppError_1 = require("../../../utils/AppError");
 const server_1 = require("../../../config/server");
+const error_handler_1 = require("../../../utils/error-handler");
 const prisma = new client_1.PrismaClient();
 class AuthService {
-    generateTokens(userId, role) {
-        const payload = { userId, role: role.toString() };
+    generateTokens(userId, role, email, userType) {
+        const payload = {
+            userId,
+            email,
+            role: role.toString(),
+            userType: userType || 'FREELANCER'
+        };
         const accessToken = jsonwebtoken_1.default.sign(payload, server_1.config.JWT_SECRET, { expiresIn: server_1.config.JWT_EXPIRES_IN });
         const refreshToken = jsonwebtoken_1.default.sign(payload, server_1.config.JWT_REFRESH_SECRET, { expiresIn: server_1.config.JWT_REFRESH_EXPIRES_IN });
         return { accessToken, refreshToken };
+    }
+    async simpleRegister(userData) {
+        const { firstName, lastName, email, password } = userData;
+        const existingUser = await prisma.user.findUnique({
+            where: { email }
+        });
+        if (existingUser) {
+            throw new error_handler_1.ConflictError('User already exists');
+        }
+        const hashedPassword = await bcryptjs_1.default.hash(password, server_1.config.BCRYPT_ROUNDS);
+        const user = await prisma.user.create({
+            data: {
+                email,
+                password: hashedPassword,
+                firstName,
+                lastName,
+                role: client_1.Role.USER,
+                userType: 'FREELANCER'
+            },
+            select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                role: true,
+                userType: true,
+                isActive: true,
+                createdAt: true
+            }
+        });
+        const token = jsonwebtoken_1.default.sign({ userId: user.id, email: user.email, role: user.role }, server_1.config.JWT_SECRET, { expiresIn: server_1.config.JWT_EXPIRES_IN });
+        const refreshToken = jsonwebtoken_1.default.sign({ userId: user.id }, server_1.config.JWT_REFRESH_SECRET, { expiresIn: server_1.config.JWT_REFRESH_EXPIRES_IN });
+        return {
+            user: {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+                role: user.role,
+                userType: user.userType,
+                isActive: user.isActive,
+                createdAt: user.createdAt
+            },
+            token,
+            refreshToken
+        };
     }
     async register(userData) {
         const { firstName, lastName, email, password, userType, companyName, industry, companySize, skills, dailyRate, availability, experience } = userData;
@@ -70,11 +122,12 @@ class AuthService {
             }
             return user;
         });
-        const { accessToken, refreshToken } = this.generateTokens(result.id, result.role);
+        const { accessToken, refreshToken } = this.generateTokens(result.id, result.role, result.email, result.userType);
         return {
             user: {
                 id: result.id,
-                name: `${result.firstName} ${result.lastName}`.trim(),
+                firstName: result.firstName,
+                lastName: result.lastName,
                 email: result.email,
                 role: result.role,
                 userType: result.userType,
@@ -111,11 +164,12 @@ class AuthService {
         if (!isPasswordValid) {
             throw new AppError_1.AppError('Invalid email or password', 400);
         }
-        const { accessToken, refreshToken } = this.generateTokens(user.id, user.role);
+        const { accessToken, refreshToken } = this.generateTokens(user.id, user.role, user.email, user.userType);
         return {
             user: {
                 id: user.id,
-                name: `${user.firstName} ${user.lastName}`.trim(),
+                firstName: user.firstName,
+                lastName: user.lastName,
                 email: user.email,
                 role: user.role,
                 userType: user.userType,

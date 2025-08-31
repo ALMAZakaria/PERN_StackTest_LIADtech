@@ -31,10 +31,14 @@ api.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Token expired or invalid - only redirect if not already on login page
+      const currentPath = window.location.pathname;
+      if (currentPath !== '/login' && currentPath !== '/register') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('isAuthenticated');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -79,6 +83,7 @@ export interface User {
 export interface AuthResponse {
   user: User;
   token: string;
+  refreshToken: string;
 }
 
 // Freelance Profile

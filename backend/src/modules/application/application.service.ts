@@ -128,7 +128,8 @@ export class ApplicationService {
     } else if (companyProfile) {
       return this.applicationRepository.findByCompanyId(userId);
     } else {
-      throw new AppError('User profile not found', 404);
+      // Return empty array if no profile exists
+      return [];
     }
   }
 

@@ -1,97 +1,104 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 
-// Extend Request interface to include user property
-interface AuthenticatedRequest extends Request {
+import { config } from './config/server';
+import { requestLogger, securityLogger } from './middleware/logger.middleware';
+import { errorHandler } from './middleware/error.middleware';
+import { ResponseUtil } from './utils/response';
+
+// Import route modules
+import userRoutes from './modules/user/router';
+import dashboardRoutes from './modules/dashboard/router/dashboard.router';
+import freelanceRoutes from './modules/freelance/router/freelance.router';
+import missionRoutes from './modules/mission/router/mission.router';
+import companyRoutes from './modules/company/router/company.router';
+import skillsRoutes from './modules/skills/skills.router';
+import portfolioRoutes from './modules/portfolio/portfolio.router';
+import applicationRoutes from './modules/application/application.router';
+import ratingRoutes from './modules/rating/rating.router';
+import notificationRoutes from './modules/notification/notification.router';
+
+const app = express();
+
+// Security middleware
+app.use(helmet());
+
+// CORS configuration
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = config.CORS_ORIGIN.split(',').map(origin => origin.trim());
+    
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400, // 24 hours
+};
+
+app.use(cors(corsOptions));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: config.RATE_LIMIT_WINDOW_MS,
+  max: config.RATE_LIMIT_MAX_REQUESTS,
+  message: {
+    error: 'Too many requests from this IP, please try again later.',
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(limiter);
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Compression middleware
+app.use(compression());
+
+// Logging middleware
+app.use(requestLogger);
+app.use(securityLogger);
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Simple auth middleware for testing
+interface AuthenticatedRequest extends express.Request {
   user?: {
     userId: string;
     role: string;
   };
 }
 
-const app = express();
-const PORT = process.env.PORT || 5000;
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-
-// Middleware
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
-}));
-app.use(express.json({
-  limit: '10mb'
-}));
-
-// Handle JSON parsing errors
-app.use((err: any, req: Request, res: Response, next: any) => {
-  if (err instanceof SyntaxError && 'body' in err) {
-    return res.status(400).json({ 
-      success: false, 
-      message: 'Invalid JSON format' 
-    });
-  }
-  next(err);
-  return;
-});
-
-// In-memory data store (for testing without database)
-const users: any[] = [
-  {
-    id: '1',
-    name: 'Admin User',
-    email: 'admin@demo.com',
-    password: '$2a$12$PxOcXjx.20exyTJ109UIvuJM/Azt3hiib2t4j215LzNewvhBKj9xa', // demo123
-    role: 'admin',
-    isActive: true,
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01')
-  },
-  {
-    id: '2',
-    name: 'John Doe',
-    email: 'john@example.com',
-    password: '$2a$12$PxOcXjx.20exyTJ109UIvuJM/Azt3hiib2t4j215LzNewvhBKj9xa', // demo123
-    role: 'user',
-    isActive: true,
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-15')
-  },
-  {
-    id: '3',
-    name: 'Jane Smith',
-    email: 'jane@example.com',
-    password: '$2a$12$PxOcXjx.20exyTJ109UIvuJM/Azt3hiib2t4j215LzNewvhBKj9xa', // demo123
-    role: 'user',
-    isActive: true,
-    createdAt: new Date('2024-01-14'),
-    updatedAt: new Date('2024-01-14')
-  }
-];
-
-// Validation schemas
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1)
-});
-
-const registerSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6)
-});
-
-const createUserSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6),
-  role: z.enum(['user', 'admin', 'moderator']).default('user')
-});
-
-// Auth middleware
-const authenticateToken = (req: AuthenticatedRequest, res: Response, next: any): void => {
+const authenticateToken = (req: AuthenticatedRequest, res: express.Response, next: any): void => {
   const authHeader = req.headers['authorization'];
 
   if (!authHeader) {
@@ -111,7 +118,7 @@ const authenticateToken = (req: AuthenticatedRequest, res: Response, next: any):
     return;
   }
 
-  jwt.verify(token, JWT_SECRET, (err: any, user: any): void => {
+  jwt.verify(token, config.JWT_SECRET, (err: any, user: any): void => {
     if (err) {
       res.status(401).json({ success: false, message: 'Invalid or expired token' });
       return;
@@ -121,73 +128,110 @@ const authenticateToken = (req: AuthenticatedRequest, res: Response, next: any):
   });
 };
 
-// Helper functions
-const generateToken = (userId: string, role: string) => {
-  return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '7d' });
-};
-
-const formatUser = (user: any) => ({
-  id: user.id,
-  name: user.name,
-  email: user.email,
-  role: user.role,
-  isActive: user.isActive,
-  createdAt: user.createdAt,
-  updatedAt: user.updatedAt
+// Simple validation schemas for testing
+const simpleRegisterSchema = z.object({
+  firstName: z.string().min(2, 'First name must be at least 2 characters'),
+  lastName: z.string().min(2, 'Last name must be at least 2 characters'),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-// 🔐 AUTH ROUTES
-app.post('/api/v1/auth/register', async (req: Request, res: Response) => {
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+// In-memory data store for testing
+const users: any[] = [
+  {
+    id: '1',
+    firstName: 'Admin',
+    lastName: 'User',
+    email: 'admin@demo.com',
+    password: '$2a$12$ali2ogGkaoKbmiRlRyqPFup6vbocp05a7mcZCJS9914rrp9sCgVTG', // demo123
+    role: 'admin',
+    isActive: true,
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01')
+  }
+];
+
+// Simple auth routes for testing
+app.post('/api/v1/auth/register', async (req: express.Request, res: express.Response) => {
   try {
-    const { name, email, password } = registerSchema.parse(req.body);
-    const existingUser = users.find(u => u.email === email);
+    const userData = simpleRegisterSchema.parse(req.body);
+    const existingUser = users.find(u => u.email === userData.email);
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'User already exists' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(userData.password, 12);
     const newUser = {
       id: String(users.length + 1),
-      name, email, password: hashedPassword, role: 'user', isActive: true,
-      createdAt: new Date(), updatedAt: new Date()
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      password: hashedPassword, 
+      role: 'user', 
+      isActive: true,
+      createdAt: new Date(), 
+      updatedAt: new Date()
     };
     users.push(newUser);
 
-    const token = generateToken(newUser.id, newUser.role);
+    const token = jwt.sign({ userId: newUser.id, role: newUser.role }, config.JWT_SECRET, { expiresIn: '7d' });
     return res.status(201).json({
       success: true, message: 'User registered successfully',
-      data: { user: formatUser(newUser), token }
+      data: { 
+        user: { 
+          id: newUser.id, 
+          firstName: newUser.firstName, 
+          lastName: newUser.lastName, 
+          email: newUser.email, 
+          role: newUser.role 
+        }, 
+        token 
+      }
     });
   } catch (error: any) {
     return res.status(400).json({ success: false, message: error.message || 'Registration failed' });
   }
 });
 
-app.post('/api/v1/auth/login', async (req: Request, res: Response) => {
+app.post('/api/v1/auth/login', async (req: express.Request, res: express.Response) => {
   try {
-    const { email, password } = loginSchema.parse(req.body);
-    const user = users.find(u => u.email === email);
+    const credentials = loginSchema.parse(req.body);
+    const user = users.find(u => u.email === credentials.email);
     if (!user || !user.isActive) {
       return res.status(400).json({ success: false, message: 'Invalid email or password' });
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await bcrypt.compare(credentials.password, user.password);
     if (!isValidPassword) {
       return res.status(400).json({ success: false, message: 'Invalid email or password' });
     }
 
-    const token = generateToken(user.id, user.role);
+    const token = jwt.sign({ userId: user.id, role: user.role }, config.JWT_SECRET, { expiresIn: '7d' });
     return res.json({
       success: true, message: 'Login successful',
-      data: { user: formatUser(user), token }
+      data: { 
+        user: { 
+          id: user.id, 
+          firstName: user.firstName, 
+          lastName: user.lastName, 
+          email: user.email, 
+          role: user.role 
+        }, 
+        token 
+      }
     });
   } catch (error: any) {
     return res.status(400).json({ success: false, message: error.message || 'Login failed' });
   }
 });
 
-// 📊 DASHBOARD ROUTES
-app.get('/api/v1/dashboard/statistics', authenticateToken, (req: AuthenticatedRequest, res: Response) => {
+// Simple dashboard routes for testing
+app.get('/api/v1/dashboard/statistics', authenticateToken, (req: AuthenticatedRequest, res: express.Response) => {
   const totalUsers = users.length;
   const activeUsers = users.filter(u => u.isActive).length;
   const today = new Date(); today.setHours(0, 0, 0, 0);
@@ -199,24 +243,24 @@ app.get('/api/v1/dashboard/statistics', authenticateToken, (req: AuthenticatedRe
   });
 });
 
-app.get('/api/v1/dashboard/activity', authenticateToken, (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/v1/dashboard/activity', authenticateToken, (req: AuthenticatedRequest, res: express.Response) => {
   const limit = parseInt(req.query.limit as string) || 10;
   const activities = users.slice(-limit).reverse().map(user => ({
     id: `user_${user.id}`, type: 'user_registered', title: 'New user registered',
-    description: `${user.name} created a new account`, time: user.createdAt, user: user.name
+    description: `${user.firstName} ${user.lastName} created a new account`, time: user.createdAt, user: `${user.firstName} ${user.lastName}`
   }));
 
   return res.json({ success: true, message: 'Recent activities retrieved successfully', data: activities });
 });
 
-// 👥 USER MANAGEMENT ROUTES
-app.get('/api/v1/users', authenticateToken, (req: AuthenticatedRequest, res: Response) => {
+// Simple user routes for testing
+app.get('/api/v1/users', authenticateToken, (req: AuthenticatedRequest, res: express.Response) => {
   const { search, role, page = 1, limit = 20 } = req.query;
   let filteredUsers = [...users];
 
   if (search) {
     filteredUsers = filteredUsers.filter(user => 
-      user.name.toLowerCase().includes((search as string).toLowerCase()) ||
+      `${user.firstName} ${user.lastName}`.toLowerCase().includes((search as string).toLowerCase()) ||
       user.email.toLowerCase().includes((search as string).toLowerCase())
     );
   }
@@ -231,22 +275,27 @@ app.get('/api/v1/users', authenticateToken, (req: AuthenticatedRequest, res: Res
 
   return res.json({
     success: true, message: 'Users retrieved successfully',
-    data: paginatedUsers.map(formatUser),
-    meta: {
-      page: Number(page), limit: Number(limit), total: filteredUsers.length,
-      totalPages: Math.ceil(filteredUsers.length / Number(limit))
-    }
+    data: paginatedUsers.map(user => ({
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    }))
   });
 });
 
-app.post('/api/v1/users/create', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+app.post('/api/v1/users/create', authenticateToken, async (req: AuthenticatedRequest, res: express.Response) => {
   try {
     const requestingUser = users.find(u => u.id === req.user?.userId);
     if (!requestingUser || requestingUser.role !== 'admin') {
       return res.status(403).json({ success: false, message: 'Insufficient permissions' });
     }
 
-    const { name, email, password, role } = createUserSchema.parse(req.body);
+    const { firstName, lastName, email, password, role } = req.body;
     const existingUser = users.find(u => u.email === email);
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'User with this email already exists' });
@@ -254,20 +303,29 @@ app.post('/api/v1/users/create', authenticateToken, async (req: AuthenticatedReq
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const newUser = {
-      id: String(users.length + 1), name, email, password: hashedPassword,
+      id: String(users.length + 1), firstName, lastName, email, password: hashedPassword,
       role: role || 'user', isActive: true, createdAt: new Date(), updatedAt: new Date()
     };
     users.push(newUser);
 
     return res.status(201).json({
-      success: true, message: 'User created successfully', data: formatUser(newUser)
+      success: true, message: 'User created successfully', data: {
+        id: newUser.id,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
+        email: newUser.email,
+        role: newUser.role,
+        isActive: newUser.isActive,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt
+      }
     });
   } catch (error: any) {
     return res.status(400).json({ success: false, message: error.message || 'User creation failed' });
   }
 });
 
-app.get('/api/v1/users/:id', authenticateToken, (req: AuthenticatedRequest, res: Response) => {
+app.get('/api/v1/users/:id', authenticateToken, (req: AuthenticatedRequest, res: express.Response) => {
   const { id } = req.params;
   const user = users.find(u => u.id === id);
 
@@ -276,96 +334,48 @@ app.get('/api/v1/users/:id', authenticateToken, (req: AuthenticatedRequest, res:
   }
 
   return res.json({
-    success: true, message: 'User retrieved successfully', data: formatUser(user)
-  });
-});
-
-app.put('/api/v1/users/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { name, email, role, isActive } = req.body;
-
-    const userIndex = users.findIndex(u => u.id === id);
-    if (userIndex === -1) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+    success: true, message: 'User retrieved successfully', data: {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
     }
-
-    if (email && email !== users[userIndex].email) {
-      const existingUser = users.find(u => u.email === email && u.id !== id);
-      if (existingUser) {
-        return res.status(400).json({ success: false, message: 'Email already in use' });
-      }
-    }
-
-    if (name) users[userIndex].name = name;
-    if (email) users[userIndex].email = email;
-    if (role) users[userIndex].role = role;
-    if (typeof isActive === 'boolean') users[userIndex].isActive = isActive;
-    users[userIndex].updatedAt = new Date();
-
-    return res.json({
-      success: true, message: 'User updated successfully', data: formatUser(users[userIndex])
-    });
-  } catch (error: any) {
-    return res.status(400).json({ success: false, message: error.message || 'User update failed' });
-  }
-});
-
-app.delete('/api/v1/users/:id', authenticateToken, (req: AuthenticatedRequest, res: Response) => {
-  const { id } = req.params;
-  
-  const requestingUser = users.find(u => u.id === req.user?.userId);
-  if (!requestingUser || requestingUser.role !== 'admin') {
-    return res.status(403).json({ success: false, message: 'Admin access required' });
-  }
-
-  const userIndex = users.findIndex(u => u.id === id);
-  if (userIndex === -1) {
-    return res.status(404).json({ success: false, message: 'User not found' });
-  }
-
-  if (id === req.user?.userId) {
-    return res.status(400).json({ success: false, message: 'Cannot delete your own account' });
-  }
-
-  users.splice(userIndex, 1);
-
-  return res.json({ success: true, message: 'User deleted successfully' });
-});
-
-// Health check
-app.get('/health', (req: Request, res: Response) => {
-  return res.json({
-    status: 'healthy',
-    timestamp: new Date()
   });
 });
 
-app.get('/api/v1/health', (req: Request, res: Response) => {
-  return res.json({
-    success: true, message: 'Server is healthy',
-    data: { status: 'online', timestamp: new Date(), uptime: process.uptime() }
-  });
+// API routes
+const apiRouter = express.Router();
+
+// Mount module routes
+apiRouter.use('/users', userRoutes);
+apiRouter.use('/dashboard', dashboardRoutes);
+apiRouter.use('/freelance', freelanceRoutes);
+apiRouter.use('/missions', missionRoutes);
+apiRouter.use('/company', companyRoutes);
+apiRouter.use('/skills', skillsRoutes);
+apiRouter.use('/portfolio', portfolioRoutes);
+apiRouter.use('/applications', applicationRoutes);
+apiRouter.use('/ratings', ratingRoutes);
+apiRouter.use('/notifications', notificationRoutes);
+
+// Mount API routes with version prefix
+app.use(`/api/${config.API_VERSION}`, apiRouter);
+
+// 404 handler for undefined routes
+app.use('*', (req, res) => {
+  res.status(404).json({ success: false, message: 'Route not found' });
 });
 
-// Error handling middleware
-app.use((err: any, req: Request, res: Response, next: any) => {
-  console.error('Server error:', err);
-  
-  // Handle JSON parsing errors
-  if (err instanceof SyntaxError && 'body' in err) {
-    return res.status(400).json({ success: false, message: 'Invalid JSON' });
-  }
-  
-  return res.status(500).json({ success: false, message: 'Internal server error' });
-});
-
-app.use('*', (req: Request, res: Response) => {
-  return res.status(404).json({ success: false, message: 'Route not found' });
-});
+// Global error handler (must be last)
+app.use(errorHandler);
 
 // Start server
 if (process.env.NODE_ENV !== 'test') {
+  const PORT = process.env.PORT || 5000;
   app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📚 Health Check: http://localhost:${PORT}/health`);

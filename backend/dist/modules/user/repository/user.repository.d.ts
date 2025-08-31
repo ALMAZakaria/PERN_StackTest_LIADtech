@@ -4,6 +4,13 @@ export declare class UserRepository {
     create(data: CreateUserDto & {
         password: string;
     }): Promise<User>;
+    createWithRole(data: {
+        email: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+        role: string;
+    }): Promise<User>;
     findById(id: string): Promise<User | null>;
     findByEmail(email: string): Promise<User | null>;
     findMany(query: GetUsersQueryDto): Promise<{
@@ -17,7 +24,6 @@ export declare class UserRepository {
     updatePassword(id: string, hashedPassword: string): Promise<User>;
     delete(id: string): Promise<User>;
     hardDelete(id: string): Promise<User>;
-    exists(id: string): Promise<boolean>;
     existsByEmail(email: string, excludeId?: string): Promise<boolean>;
 }
 //# sourceMappingURL=user.repository.d.ts.map

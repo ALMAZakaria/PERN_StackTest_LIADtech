@@ -19,7 +19,8 @@ describe('PERN Stack API Tests', () => {
     describe('POST /api/v1/auth/register', () => {
       it('should register a new user successfully', async () => {
         const userData = {
-          name: 'John Doe',
+          firstName: 'John',
+          lastName: 'Doe',
           email: 'john.doe@example.com',
           password: 'password123'
         };
@@ -37,7 +38,8 @@ describe('PERN Stack API Tests', () => {
 
       it('should reject registration with existing email', async () => {
         const userData = {
-          name: 'Jane Doe',
+          firstName: 'Jane',
+          lastName: 'Doe',
           email: 'admin@demo.com', // Already exists
           password: 'password123'
         };
@@ -53,7 +55,8 @@ describe('PERN Stack API Tests', () => {
 
       it('should reject registration with invalid data', async () => {
         const invalidData = {
-          name: '', // Too short
+          firstName: '', // Too short
+          lastName: '', // Too short
           email: 'invalid-email', // Invalid email
           password: '123' // Too short
         };
@@ -311,7 +314,8 @@ describe('PERN Stack API Tests', () => {
         }
 
         const newUser = {
-          name: 'New User',
+          firstName: 'New',
+          lastName: 'User',
           email: 'newuser@example.com',
           password: 'password123',
           role: 'user'
@@ -340,7 +344,8 @@ describe('PERN Stack API Tests', () => {
         }
 
         const duplicateUser = {
-          name: 'Duplicate User',
+          firstName: 'Duplicate',
+          lastName: 'User',
           email: 'admin@demo.com', // Already exists
           password: 'password123',
           role: 'user'
@@ -359,7 +364,8 @@ describe('PERN Stack API Tests', () => {
       it('should reject creation without admin token', async () => {
         // Create a regular user first by registering
         const regularUser = {
-          name: 'Regular User',
+          firstName: 'Regular',
+          lastName: 'User',
           email: 'regular@example.com',
           password: 'password123'
         };
@@ -379,7 +385,8 @@ describe('PERN Stack API Tests', () => {
         const userToken = userLogin.body.data.token;
 
         const newUser = {
-          name: 'Unauthorized User',
+          firstName: 'Unauthorized',
+          lastName: 'User',
           email: 'unauthorized@example.com',
           password: 'password123',
           role: 'user'

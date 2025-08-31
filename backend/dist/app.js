@@ -27,12 +27,31 @@ const rating_router_1 = __importDefault(require("./modules/rating/rating.router"
 const notification_router_1 = __importDefault(require("./modules/notification/notification.router"));
 const app = (0, express_1.default)();
 app.use((0, helmet_1.default)());
-app.use((0, cors_1.default)({
-    origin: server_1.config.CORS_ORIGIN,
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (!origin)
+            return callback(null, true);
+        const allowedOrigins = server_1.config.CORS_ORIGIN.split(',').map(origin => origin.trim());
+        if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+            callback(null, true);
+        }
+        else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+    allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'X-Requested-With',
+        'Accept',
+        'Origin'
+    ],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    maxAge: 86400,
+};
+app.use((0, cors_1.default)(corsOptions));
 const limiter = (0, express_rate_limit_1.default)({
     windowMs: server_1.config.RATE_LIMIT_WINDOW_MS,
     max: server_1.config.RATE_LIMIT_MAX_REQUESTS,
@@ -47,6 +66,7 @@ app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
 app.use((0, compression_1.default)());
 app.use(logger_middleware_1.requestLogger);
+app.use(logger_middleware_1.securityLogger);
 app.get('/health', (req, res) => {
     response_1.ResponseUtil.success(res, {
         status: 'OK',

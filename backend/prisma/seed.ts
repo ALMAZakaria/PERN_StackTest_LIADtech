@@ -42,7 +42,7 @@ async function main() {
     update: {},
     create: {
       email: 'freelancer@skillbridge.com',
-      password: hashedPassword,
+      password: userPassword,
       firstName: 'Alex',
       lastName: 'Developer',
       role: 'USER',
@@ -55,7 +55,7 @@ async function main() {
     update: {},
     create: {
       email: 'company@skillbridge.com',
-      password: hashedPassword,
+      password: userPassword,
       firstName: 'Sarah',
       lastName: 'Manager',
       role: 'USER',

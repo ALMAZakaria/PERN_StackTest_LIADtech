@@ -14,15 +14,15 @@ export declare const updateProfileSchema: z.ZodObject<{
     phone: z.ZodEffects<z.ZodOptional<z.ZodString>, string | undefined, string | undefined>;
     dateOfBirth: z.ZodEffects<z.ZodOptional<z.ZodString>, string | undefined, string | undefined>;
 }, "strict", z.ZodTypeAny, {
-    email?: string | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
+    email?: string | undefined;
     phone?: string | undefined;
     dateOfBirth?: string | undefined;
 }, {
-    email?: string | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
+    email?: string | undefined;
     phone?: string | undefined;
     dateOfBirth?: string | undefined;
 }>;
@@ -33,16 +33,16 @@ export declare const createAdminUserSchema: z.ZodObject<{
     lastName: z.ZodString;
     role: z.ZodDefault<z.ZodEnum<["USER", "ADMIN"]>>;
 }, "strip", z.ZodTypeAny, {
-    email: string;
-    password: string;
     firstName: string;
     lastName: string;
+    email: string;
+    password: string;
     role: "USER" | "ADMIN";
 }, {
-    email: string;
-    password: string;
     firstName: string;
     lastName: string;
+    email: string;
+    password: string;
     role?: "USER" | "ADMIN" | undefined;
 }>;
 export declare const bulkUserActionSchema: z.ZodObject<{
@@ -68,7 +68,7 @@ export declare const userSearchFiltersSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     page: number;
     limit: number;
-    sortBy: "email" | "firstName" | "lastName" | "createdAt" | "updatedAt";
+    sortBy: "firstName" | "lastName" | "email" | "createdAt" | "updatedAt";
     sortOrder: "asc" | "desc";
     search?: string | undefined;
     role?: "USER" | "ADMIN" | undefined;
@@ -77,13 +77,13 @@ export declare const userSearchFiltersSchema: z.ZodObject<{
     createdBefore?: string | undefined;
 }, {
     search?: string | undefined;
+    role?: "USER" | "ADMIN" | undefined;
     page?: number | undefined;
     limit?: number | undefined;
-    role?: "USER" | "ADMIN" | undefined;
     isActive?: boolean | undefined;
     createdAfter?: string | undefined;
     createdBefore?: string | undefined;
-    sortBy?: "email" | "firstName" | "lastName" | "createdAt" | "updatedAt" | undefined;
+    sortBy?: "firstName" | "lastName" | "email" | "createdAt" | "updatedAt" | undefined;
     sortOrder?: "asc" | "desc" | undefined;
 }>;
 export type UpdateProfileDto = z.infer<typeof updateProfileSchema>;

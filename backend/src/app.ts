@@ -7,7 +7,7 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
 
 import { config } from './config/server';
-import { requestLogger } from './middleware/logger.middleware';
+import { requestLogger, securityLogger } from './middleware/logger.middleware';
 import { errorHandler } from './middleware/error.middleware';
 import { ResponseUtil } from './utils/response';
 
@@ -30,12 +30,33 @@ const app = express();
 app.use(helmet());
 
 // CORS configuration
-app.use(cors({
-  origin: config.CORS_ORIGIN,
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = config.CORS_ORIGIN.split(',').map(origin => origin.trim());
+    
+    if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'X-Requested-With',
+    'Accept',
+    'Origin'
+  ],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400, // 24 hours
+};
+
+app.use(cors(corsOptions));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -59,6 +80,7 @@ app.use(compression());
 
 // Logging middleware
 app.use(requestLogger);
+app.use(securityLogger);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
