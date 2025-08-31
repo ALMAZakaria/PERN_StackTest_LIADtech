@@ -18,26 +18,26 @@ export declare const registerSchema: z.ZodObject<{
     firstName: string;
     lastName: string;
     userType: "FREELANCER" | "COMPANY";
+    companyName?: string | undefined;
+    industry?: string | undefined;
+    companySize?: "STARTUP" | "SMALL" | "MEDIUM" | "LARGE" | "ENTERPRISE" | undefined;
     skills?: string[] | undefined;
     dailyRate?: number | undefined;
     availability?: number | undefined;
     experience?: number | undefined;
-    companyName?: string | undefined;
-    industry?: string | undefined;
-    companySize?: "STARTUP" | "SMALL" | "MEDIUM" | "LARGE" | "ENTERPRISE" | undefined;
 }, {
     email: string;
     password: string;
     firstName: string;
     lastName: string;
     userType: "FREELANCER" | "COMPANY";
+    companyName?: string | undefined;
+    industry?: string | undefined;
+    companySize?: "STARTUP" | "SMALL" | "MEDIUM" | "LARGE" | "ENTERPRISE" | undefined;
     skills?: string[] | undefined;
     dailyRate?: number | undefined;
     availability?: number | undefined;
     experience?: number | undefined;
-    companyName?: string | undefined;
-    industry?: string | undefined;
-    companySize?: "STARTUP" | "SMALL" | "MEDIUM" | "LARGE" | "ENTERPRISE" | undefined;
 }>;
 export declare const loginSchema: z.ZodObject<{
     email: z.ZodString;

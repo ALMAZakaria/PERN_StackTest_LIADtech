@@ -55,9 +55,13 @@ export class MissionRepository {
             freelancer: {
               select: {
                 id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
+                user: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                  },
+                },
               },
             },
           },
@@ -151,9 +155,13 @@ export class MissionRepository {
             freelancer: {
               select: {
                 id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
+                user: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                  },
+                },
               },
             },
           },
@@ -174,9 +182,13 @@ export class MissionRepository {
             freelancer: {
               select: {
                 id: true,
-                firstName: true,
-                lastName: true,
-                email: true,
+                user: {
+                  select: {
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                  },
+                },
               },
             },
           },

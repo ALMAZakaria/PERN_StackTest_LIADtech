@@ -60,16 +60,16 @@ export declare const getUsersQuerySchema: z.ZodObject<{
     isActive: z.ZodOptional<z.ZodEffects<z.ZodString, boolean, string>>;
 }, "strip", z.ZodTypeAny, {
     search?: string | undefined;
-    role?: "USER" | "ADMIN" | undefined;
-    isActive?: boolean | undefined;
     page?: number | undefined;
     limit?: number | undefined;
+    role?: "USER" | "ADMIN" | undefined;
+    isActive?: boolean | undefined;
 }, {
     search?: string | undefined;
-    role?: "USER" | "ADMIN" | undefined;
-    isActive?: string | undefined;
     page?: string | undefined;
     limit?: string | undefined;
+    role?: "USER" | "ADMIN" | undefined;
+    isActive?: string | undefined;
 }>;
 export type GetUsersQueryDto = z.infer<typeof getUsersQuerySchema>;
 export declare const userIdParamSchema: z.ZodObject<{

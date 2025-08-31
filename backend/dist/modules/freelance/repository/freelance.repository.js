@@ -25,7 +25,7 @@ class FreelanceRepository {
                         isActive: true,
                     },
                 },
-                portfolio: true,
+                portfolio_projects: true,
             },
         });
     }
@@ -83,7 +83,7 @@ class FreelanceRepository {
                         isActive: true,
                     },
                 },
-                portfolio: {
+                portfolio_projects: {
                     take: 3,
                 },
             },

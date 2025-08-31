@@ -33,9 +33,13 @@ class MissionRepository {
                         freelancer: {
                             select: {
                                 id: true,
-                                firstName: true,
-                                lastName: true,
-                                email: true,
+                                user: {
+                                    select: {
+                                        firstName: true,
+                                        lastName: true,
+                                        email: true,
+                                    },
+                                },
                             },
                         },
                     },
@@ -110,9 +114,13 @@ class MissionRepository {
                         freelancer: {
                             select: {
                                 id: true,
-                                firstName: true,
-                                lastName: true,
-                                email: true,
+                                user: {
+                                    select: {
+                                        firstName: true,
+                                        lastName: true,
+                                        email: true,
+                                    },
+                                },
                             },
                         },
                     },
@@ -132,9 +140,13 @@ class MissionRepository {
                         freelancer: {
                             select: {
                                 id: true,
-                                firstName: true,
-                                lastName: true,
-                                email: true,
+                                user: {
+                                    select: {
+                                        firstName: true,
+                                        lastName: true,
+                                        email: true,
+                                    },
+                                },
                             },
                         },
                     },

@@ -90,7 +90,45 @@ export class MissionService {
       throw new AppError('Duration must be greater than 0', 400);
     }
 
-    return this.missionRepository.update(id, data);
+    // Validate status transitions
+    if (data.status) {
+      const validTransitions: Record<string, string[]> = {
+        'OPEN': ['IN_PROGRESS', 'CANCELLED'],
+        'IN_PROGRESS': ['COMPLETED', 'CANCELLED'],
+        'COMPLETED': [],
+        'CANCELLED': []
+      };
+
+      const currentStatus = mission.status;
+      const allowedTransitions = validTransitions[currentStatus] || [];
+      
+      if (!allowedTransitions.includes(data.status)) {
+        throw new AppError(`Invalid status transition from ${currentStatus} to ${data.status}`, 400);
+      }
+    }
+
+    const updatedMission = await this.missionRepository.update(id, data);
+
+    // Send notifications for status changes
+    if (data.status && data.status !== mission.status) {
+      const { NotificationService } = await import('../../notification/notification.service');
+      const notificationService = new NotificationService();
+      
+      // Notify freelancers who applied to this mission
+      const { ApplicationRepository } = await import('../../application/application.repository');
+      const applicationRepository = new ApplicationRepository();
+      const applications = await applicationRepository.findByMissionId(id);
+      
+      applications.forEach(async (application) => {
+        await notificationService.notifyMissionUpdated(
+          application.freelancerId,
+          mission.title,
+          `Status changed to ${data.status}`
+        );
+      });
+    }
+
+    return updatedMission;
   }
 
   async deleteMission(id: string, userId: string): Promise<void> {

@@ -29,7 +29,7 @@ const users: any[] = [
     id: '1',
     name: 'Admin User',
     email: 'admin@demo.com',
-    password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/z.2QKkNp.', // demo123
+    password: '$2a$12$ali2ogGkaoKbmiRlRyqPFup6vbocp05a7mcZCJS9914rrp9sCgVTG', // demo123
     role: 'admin',
     isActive: true,
     createdAt: new Date('2024-01-01'),
@@ -39,7 +39,7 @@ const users: any[] = [
     id: '2',
     name: 'John Doe',
     email: 'john@example.com',
-    password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/z.2QKkNp.', // demo123
+    password: '$2a$12$OZCoh9Jlp.6IsbH.bM/vauTAJRV.X6t5HHZCA78lyfliL8A1J0dpe', // demo123
     role: 'user',
     isActive: true,
     createdAt: new Date('2024-01-15'),
@@ -49,7 +49,7 @@ const users: any[] = [
     id: '3',
     name: 'Jane Smith',
     email: 'jane@example.com',
-    password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/z.2QKkNp.', // demo123
+    password: '$2a$12$OZCoh9Jlp.6IsbH.bM/vauTAJRV.X6t5HHZCA78lyfliL8A1J0dpe', // demo123
     role: 'user',
     isActive: true,
     createdAt: new Date('2024-01-14'),
@@ -79,7 +79,18 @@ const createUserSchema = z.object({
 // Auth middleware
 const authenticateToken = (req: AuthenticatedRequest, res: Response, next: any): void => {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!authHeader) {
+    res.status(401).json({ success: false, message: 'Access token required' });
+    return;
+  }
+
+  if (!authHeader.startsWith('Bearer ')) {
+    res.status(401).json({ success: false, message: 'Invalid authorization header format' });
+    return;
+  }
+
+  const token = authHeader.split(' ')[1];
 
   if (!token) {
     res.status(401).json({ success: false, message: 'Access token required' });
@@ -88,7 +99,7 @@ const authenticateToken = (req: AuthenticatedRequest, res: Response, next: any):
 
   jwt.verify(token, JWT_SECRET, (err: any, user: any): void => {
     if (err) {
-      res.status(403).json({ success: false, message: 'Invalid or expired token' });
+      res.status(401).json({ success: false, message: 'Invalid or expired token' });
       return;
     }
     req.user = user;
@@ -218,13 +229,13 @@ app.post('/api/v1/users/create', authenticateToken, async (req: AuthenticatedReq
   try {
     const requestingUser = users.find(u => u.id === req.user?.userId);
     if (!requestingUser || requestingUser.role !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Admin access required' });
+      return res.status(403).json({ success: false, message: 'Insufficient permissions' });
     }
 
     const { name, email, password, role } = createUserSchema.parse(req.body);
     const existingUser = users.find(u => u.email === email);
     if (existingUser) {
-      return res.status(400).json({ success: false, message: 'User already exists' });
+      return res.status(400).json({ success: false, message: 'User with this email already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
@@ -309,6 +320,13 @@ app.delete('/api/v1/users/:id', authenticateToken, (req: AuthenticatedRequest, r
 });
 
 // Health check
+app.get('/health', (req: Request, res: Response) => {
+  return res.json({
+    status: 'healthy',
+    timestamp: new Date()
+  });
+});
+
 app.get('/api/v1/health', (req: Request, res: Response) => {
   return res.json({
     success: true, message: 'Server is healthy',
@@ -316,25 +334,31 @@ app.get('/api/v1/health', (req: Request, res: Response) => {
   });
 });
 
-// Error handling
+// Error handling middleware
 app.use((err: any, req: Request, res: Response, next: any) => {
   console.error('Server error:', err);
+  
+  // Handle JSON parsing errors
+  if (err instanceof SyntaxError && 'body' in err) {
+    return res.status(400).json({ success: false, message: 'Invalid JSON' });
+  }
+  
   return res.status(500).json({ success: false, message: 'Internal server error' });
 });
 
 app.use('*', (req: Request, res: Response) => {
-  return res.status(404).json({ success: false, message: `Route ${req.method} ${req.originalUrl} not found` });
+  return res.status(404).json({ success: false, message: 'Route not found' });
 });
 
 // Start server
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📚 Health Check: http://localhost:${PORT}/api/v1/health`);
+    console.log(`📚 Health Check: http://localhost:${PORT}/health`);
     console.log(`\n🔐 Demo Credentials:`);
     console.log(`   Email: admin@demo.com`);
     console.log(`   Password: demo123`);
   });
 }
 
-export default app; 
+export { app }; 

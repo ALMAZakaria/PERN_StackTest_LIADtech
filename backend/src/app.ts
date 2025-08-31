@@ -20,6 +20,9 @@ import missionRoutes from './modules/mission/router/mission.router';
 import companyRoutes from './modules/company/router/company.router';
 import skillsRoutes from './modules/skills/skills.router';
 import portfolioRoutes from './modules/portfolio/portfolio.router';
+import applicationRoutes from './modules/application/application.router';
+import ratingRoutes from './modules/rating/rating.router';
+import notificationRoutes from './modules/notification/notification.router';
 
 const app = express();
 
@@ -79,6 +82,9 @@ apiRouter.use('/missions', missionRoutes);
 apiRouter.use('/company', companyRoutes);
 apiRouter.use('/skills', skillsRoutes);
 apiRouter.use('/portfolio', portfolioRoutes);
+apiRouter.use('/applications', applicationRoutes);
+apiRouter.use('/ratings', ratingRoutes);
+apiRouter.use('/notifications', notificationRoutes);
 
 // Mount API routes with version prefix
 app.use(`/api/${config.API_VERSION}`, apiRouter);

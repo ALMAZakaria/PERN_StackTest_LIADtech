@@ -30,7 +30,7 @@ export class PortfolioRepository {
     return prisma.portfolioProject.findUnique({
       where: { id },
       include: {
-        freelancer: {
+        freelance_profiles: {
           include: {
             user: {
               select: {
@@ -85,7 +85,7 @@ export class PortfolioRepository {
     return prisma.portfolioProject.findMany({
       where,
       include: {
-        freelancer: {
+        freelance_profiles: {
           include: {
             user: {
               select: {

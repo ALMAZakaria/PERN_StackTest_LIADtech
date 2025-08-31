@@ -3,12 +3,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.app = void 0;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const zod_1 = require("zod");
 const app = (0, express_1.default)();
+exports.app = app;
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 app.use((0, cors_1.default)({
@@ -21,7 +23,7 @@ const users = [
         id: '1',
         name: 'Admin User',
         email: 'admin@demo.com',
-        password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/z.2QKkNp.',
+        password: '$2a$12$ali2ogGkaoKbmiRlRyqPFup6vbocp05a7mcZCJS9914rrp9sCgVTG',
         role: 'admin',
         isActive: true,
         createdAt: new Date('2024-01-01'),
@@ -31,7 +33,7 @@ const users = [
         id: '2',
         name: 'John Doe',
         email: 'john@example.com',
-        password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/z.2QKkNp.',
+        password: '$2a$12$OZCoh9Jlp.6IsbH.bM/vauTAJRV.X6t5HHZCA78lyfliL8A1J0dpe',
         role: 'user',
         isActive: true,
         createdAt: new Date('2024-01-15'),
@@ -41,7 +43,7 @@ const users = [
         id: '3',
         name: 'Jane Smith',
         email: 'jane@example.com',
-        password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/z.2QKkNp.',
+        password: '$2a$12$OZCoh9Jlp.6IsbH.bM/vauTAJRV.X6t5HHZCA78lyfliL8A1J0dpe',
         role: 'user',
         isActive: true,
         createdAt: new Date('2024-01-14'),
@@ -65,14 +67,22 @@ const createUserSchema = zod_1.z.object({
 });
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
+    if (!authHeader) {
+        res.status(401).json({ success: false, message: 'Access token required' });
+        return;
+    }
+    if (!authHeader.startsWith('Bearer ')) {
+        res.status(401).json({ success: false, message: 'Invalid authorization header format' });
+        return;
+    }
+    const token = authHeader.split(' ')[1];
     if (!token) {
         res.status(401).json({ success: false, message: 'Access token required' });
         return;
     }
     jsonwebtoken_1.default.verify(token, JWT_SECRET, (err, user) => {
         if (err) {
-            res.status(403).json({ success: false, message: 'Invalid or expired token' });
+            res.status(401).json({ success: false, message: 'Invalid or expired token' });
             return;
         }
         req.user = user;
@@ -181,12 +191,12 @@ app.post('/api/v1/users/create', authenticateToken, async (req, res) => {
     try {
         const requestingUser = users.find(u => u.id === req.user?.userId);
         if (!requestingUser || requestingUser.role !== 'admin') {
-            return res.status(403).json({ success: false, message: 'Admin access required' });
+            return res.status(403).json({ success: false, message: 'Insufficient permissions' });
         }
         const { name, email, password, role } = createUserSchema.parse(req.body);
         const existingUser = users.find(u => u.email === email);
         if (existingUser) {
-            return res.status(400).json({ success: false, message: 'User already exists' });
+            return res.status(400).json({ success: false, message: 'User with this email already exists' });
         }
         const hashedPassword = await bcryptjs_1.default.hash(password, 12);
         const newUser = {
@@ -259,6 +269,12 @@ app.delete('/api/v1/users/:id', authenticateToken, (req, res) => {
     users.splice(userIndex, 1);
     return res.json({ success: true, message: 'User deleted successfully' });
 });
+app.get('/health', (req, res) => {
+    return res.json({
+        status: 'healthy',
+        timestamp: new Date()
+    });
+});
 app.get('/api/v1/health', (req, res) => {
     return res.json({
         success: true, message: 'Server is healthy',
@@ -267,19 +283,21 @@ app.get('/api/v1/health', (req, res) => {
 });
 app.use((err, req, res, next) => {
     console.error('Server error:', err);
+    if (err instanceof SyntaxError && 'body' in err) {
+        return res.status(400).json({ success: false, message: 'Invalid JSON' });
+    }
     return res.status(500).json({ success: false, message: 'Internal server error' });
 });
 app.use('*', (req, res) => {
-    return res.status(404).json({ success: false, message: `Route ${req.method} ${req.originalUrl} not found` });
+    return res.status(404).json({ success: false, message: 'Route not found' });
 });
 if (process.env.NODE_ENV !== 'test') {
     app.listen(PORT, () => {
         console.log(`🚀 Server running on http://localhost:${PORT}`);
-        console.log(`📚 Health Check: http://localhost:${PORT}/api/v1/health`);
+        console.log(`📚 Health Check: http://localhost:${PORT}/health`);
         console.log(`\n🔐 Demo Credentials:`);
         console.log(`   Email: admin@demo.com`);
         console.log(`   Password: demo123`);
     });
 }
-exports.default = app;
 //# sourceMappingURL=simple-api.js.map

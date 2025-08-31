@@ -77,10 +77,10 @@ export declare const userSearchFiltersSchema: z.ZodObject<{
     createdBefore?: string | undefined;
 }, {
     search?: string | undefined;
-    role?: "USER" | "ADMIN" | undefined;
-    isActive?: boolean | undefined;
     page?: number | undefined;
     limit?: number | undefined;
+    role?: "USER" | "ADMIN" | undefined;
+    isActive?: boolean | undefined;
     createdAfter?: string | undefined;
     createdBefore?: string | undefined;
     sortBy?: "email" | "firstName" | "lastName" | "createdAt" | "updatedAt" | undefined;

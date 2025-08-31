@@ -100,7 +100,31 @@ class MissionService {
         if (data.duration !== undefined && data.duration <= 0) {
             throw new AppError_1.AppError('Duration must be greater than 0', 400);
         }
-        return this.missionRepository.update(id, data);
+        if (data.status) {
+            const validTransitions = {
+                'OPEN': ['IN_PROGRESS', 'CANCELLED'],
+                'IN_PROGRESS': ['COMPLETED', 'CANCELLED'],
+                'COMPLETED': [],
+                'CANCELLED': []
+            };
+            const currentStatus = mission.status;
+            const allowedTransitions = validTransitions[currentStatus] || [];
+            if (!allowedTransitions.includes(data.status)) {
+                throw new AppError_1.AppError(`Invalid status transition from ${currentStatus} to ${data.status}`, 400);
+            }
+        }
+        const updatedMission = await this.missionRepository.update(id, data);
+        if (data.status && data.status !== mission.status) {
+            const { NotificationService } = await Promise.resolve().then(() => __importStar(require('../../notification/notification.service')));
+            const notificationService = new NotificationService();
+            const { ApplicationRepository } = await Promise.resolve().then(() => __importStar(require('../../application/application.repository')));
+            const applicationRepository = new ApplicationRepository();
+            const applications = await applicationRepository.findByMissionId(id);
+            applications.forEach(async (application) => {
+                await notificationService.notifyMissionUpdated(application.freelancerId, mission.title, `Status changed to ${data.status}`);
+            });
+        }
+        return updatedMission;
     }
     async deleteMission(id, userId) {
         const mission = await this.missionRepository.findById(id);
