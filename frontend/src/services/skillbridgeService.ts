@@ -16,6 +16,11 @@ class SkillBridgeService {
     return response.data.data!;
   }
 
+  async createFreelanceProfile(profile: Partial<FreelanceProfile>): Promise<FreelanceProfile> {
+    const response = await api.post<ApiResponse<FreelanceProfile>>('/freelance/profile', profile);
+    return response.data.data!;
+  }
+
   async updateFreelanceProfile(profile: Partial<FreelanceProfile>): Promise<FreelanceProfile> {
     const response = await api.put<ApiResponse<FreelanceProfile>>('/freelance/profile', profile);
     return response.data.data!;
@@ -35,6 +40,11 @@ class SkillBridgeService {
   // Company Profile Management
   async getCompanyProfile(): Promise<CompanyProfile> {
     const response = await api.get<ApiResponse<CompanyProfile>>('/company/profile');
+    return response.data.data!;
+  }
+
+  async createCompanyProfile(profile: Partial<CompanyProfile>): Promise<CompanyProfile> {
+    const response = await api.post<ApiResponse<CompanyProfile>>('/company/profile', profile);
     return response.data.data!;
   }
 

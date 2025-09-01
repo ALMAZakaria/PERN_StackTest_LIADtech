@@ -94,7 +94,7 @@ export interface FreelanceProfile {
   skills: string[];
   experience: number;
   dailyRate: number;
-  availability: string;
+  availability: number;
   location: string;
   bio: string;
   createdAt: string;
