@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { authService } from '../../services/authService'
 import { UserType } from '../../services/api'
 import { getRedirectPathByRole } from '../../utils/roleUtils'
+import Header from '../../components/ui/Header'
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
@@ -147,7 +148,9 @@ const RegisterPage: React.FC = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-green-100">
@@ -164,12 +167,15 @@ const RegisterPage: React.FC = () => {
             </p>
           </div>
         </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl w-full space-y-8">
         <div>
           <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-md bg-indigo-500">
@@ -555,6 +561,7 @@ const RegisterPage: React.FC = () => {
             </p>
           </div>
         </form>
+      </div>
       </div>
     </div>
   )

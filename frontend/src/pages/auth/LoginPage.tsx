@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getRedirectPathByRole } from '../../utils/roleUtils'
+import Header from '../../components/ui/Header'
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate()
@@ -66,7 +67,9 @@ const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-md bg-indigo-500">
@@ -195,6 +198,7 @@ const LoginPage: React.FC = () => {
             </Link>
           </div>
         </form>
+      </div>
       </div>
     </div>
   )

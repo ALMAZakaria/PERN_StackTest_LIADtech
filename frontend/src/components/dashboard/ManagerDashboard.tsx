@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import Header from '../ui/Header'
 
 interface DashboardStats {
   totalUsers: number;
@@ -17,7 +18,7 @@ interface Activity {
   user?: string;
 }
 
-const SimpleDashboard: React.FC = () => {
+const ManagerDashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 4,
     activeUsers: 3,
@@ -69,28 +70,17 @@ const SimpleDashboard: React.FC = () => {
     }
   }
 
-  const handleLogout = async () => {
-    try {
-      // Try to logout via auth service if available
-      const { authService } = await import('../../services/authService')
-      await authService.logout()
-    } catch (error) {
-      console.warn('Auth service not available, doing local logout')
-      // Clear local storage anyway
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      localStorage.removeItem('isAuthenticated')
-    } finally {
-      window.location.href = '/login'
-    }
-  }
+
 
   if (loading && isBackendConnected) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          </div>
         </div>
       </div>
     )
@@ -98,35 +88,26 @@ const SimpleDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              {!isBackendConnected && (
-                <span className="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                  Demo Mode
-                </span>
-              )}
-            </div>
-            <div className="flex items-center space-x-4">
-              <Link
-                to="/demo/users"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Manage Users
-              </Link>
-              <button 
-                onClick={handleLogout}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Logout
-              </button>
-            </div>
+      <Header />
+      {/* Page Title */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <h1 className="text-3xl font-bold text-gray-900">Manager Dashboard</h1>
+            {!isBackendConnected && (
+              <span className="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                Demo Mode
+              </span>
+            )}
           </div>
+          <Link
+            to="/ManagerDashboard/users"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+          >
+            Manage Users
+          </Link>
         </div>
-      </header>
+      </div>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -180,10 +161,10 @@ const SimpleDashboard: React.FC = () => {
           {/* Welcome Section */}
           <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
             <div className="px-4 py-5 sm:p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back!</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome to Manager Dashboard!</h2>
               <p className="text-gray-600">
                 {isBackendConnected 
-                  ? "Here's what's happening in your application today."
+                  ? "Manage users, monitor system statistics, and oversee platform operations."
                   : "This is demo data. Start the backend server to see real statistics."
                 }
               </p>
@@ -285,7 +266,7 @@ const SimpleDashboard: React.FC = () => {
               <h3 className="text-lg leading-6 font-medium text-gray-900 mb-4">Quick Actions</h3>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Link
-                  to="/demo/users"
+                  to="/ManagerDashboard/users"
                   className="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500 rounded-lg border border-gray-300 hover:border-gray-400 transition-colors"
                 >
                   <div>
@@ -380,4 +361,4 @@ const SimpleDashboard: React.FC = () => {
   )
 }
 
-export default SimpleDashboard 
+export default ManagerDashboard 
