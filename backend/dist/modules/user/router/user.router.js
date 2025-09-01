@@ -14,9 +14,10 @@ router.get('/check-email', userController.checkEmailAvailability);
 router.get('/profile', auth_middleware_1.authenticateToken, userController.getProfile);
 router.put('/profile', auth_middleware_1.authenticateToken, (0, validation_middleware_1.validateRequest)({ body: user_dto_1.updateUserSchema }), userController.updateProfile);
 router.post('/change-password', auth_middleware_1.authenticateToken, (0, validation_middleware_1.validateRequest)({ body: user_dto_1.changePasswordSchema }), userController.changePassword);
-router.get('/', auth_middleware_1.authenticateToken, (0, auth_middleware_1.authorizeRoles)('ADMIN'), (0, validation_middleware_1.validateRequest)({ query: user_dto_1.getUsersQuerySchema }), userController.getUsers);
-router.post('/create', auth_middleware_1.authenticateToken, (0, auth_middleware_1.authorizeRoles)('ADMIN'), (0, validation_middleware_1.validateRequest)({ body: user_dto_1.simpleCreateUserSchema }), userController.simpleCreateUser);
+router.get('/', auth_middleware_1.authenticateToken, (0, auth_middleware_1.authorizeRoles)('ADMIN', 'MODERATOR'), (0, validation_middleware_1.validateRequest)({ query: user_dto_1.getUsersQuerySchema }), userController.getUsers);
+router.post('/create', auth_middleware_1.authenticateToken, (0, auth_middleware_1.authorizeRoles)('ADMIN', 'MODERATOR'), (0, validation_middleware_1.validateRequest)({ body: user_dto_1.simpleCreateUserSchema }), userController.simpleCreateUser);
 router.get('/:id', auth_middleware_1.authenticateToken, (0, auth_middleware_1.authorizeRoles)('ADMIN'), (0, validation_middleware_1.validateRequest)({ params: user_dto_1.userIdParamSchema }), userController.getUserById);
-router.delete('/:id', auth_middleware_1.authenticateToken, (0, auth_middleware_1.authorizeRoles)('ADMIN'), (0, validation_middleware_1.validateRequest)({ params: user_dto_1.userIdParamSchema }), userController.deleteUser);
+router.put('/:id', auth_middleware_1.authenticateToken, (0, auth_middleware_1.authorizeRoles)('ADMIN', 'MODERATOR'), (0, validation_middleware_1.validateRequest)({ params: user_dto_1.userIdParamSchema, body: user_dto_1.updateUserSchema }), userController.updateUser);
+router.delete('/:id', auth_middleware_1.authenticateToken, (0, auth_middleware_1.authorizeRoles)('ADMIN', 'MODERATOR'), (0, validation_middleware_1.validateRequest)({ params: user_dto_1.userIdParamSchema }), userController.deleteUser);
 exports.default = router;
 //# sourceMappingURL=user.router.js.map

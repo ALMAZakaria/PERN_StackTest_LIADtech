@@ -171,6 +171,23 @@ export class UserController {
     }
   };
 
+  updateUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const updateData: UpdateUserDto = req.body;
+      const currentUserRole = req.user!.role;
+
+      const updatedUser = await this.userService.updateUser(id, updateData, currentUserRole);
+      
+      // Clear cache
+      await this.userCache.clearUserCaches(id);
+
+      ResponseUtil.success(res, updatedUser, 'User updated successfully');
+    } catch (error) {
+      next(error);
+    }
+  };
+
   deleteUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;

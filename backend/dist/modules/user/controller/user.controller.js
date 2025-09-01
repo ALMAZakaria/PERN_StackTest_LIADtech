@@ -86,7 +86,8 @@ class UserController {
         this.createUser = async (req, res, next) => {
             try {
                 const userData = req.body;
-                const newUser = await this.userService.createUser(userData);
+                const currentUserRole = req.user.role;
+                const newUser = await this.userService.createUser(userData, currentUserRole);
                 response_1.ResponseUtil.created(res, newUser, 'User created successfully');
             }
             catch (error) {
@@ -96,10 +97,11 @@ class UserController {
         this.getUsers = async (req, res, next) => {
             try {
                 const query = req.query;
-                const cacheKey = JSON.stringify(query);
+                const currentUserRole = req.user.role;
+                const cacheKey = JSON.stringify({ ...query, userRole: currentUserRole });
                 let result = await this.userCache.getUserList(cacheKey);
                 if (!result) {
-                    result = await this.userService.getUsers(query);
+                    result = await this.userService.getUsers(query, currentUserRole);
                     await this.userCache.setUserList(cacheKey, result);
                 }
                 response_1.ResponseUtil.success(res, result.users, 'Users retrieved successfully', 200, result.meta);
@@ -122,10 +124,25 @@ class UserController {
                 next(error);
             }
         };
+        this.updateUser = async (req, res, next) => {
+            try {
+                const { id } = req.params;
+                const updateData = req.body;
+                const currentUserRole = req.user.role;
+                const updatedUser = await this.userService.updateUser(id, updateData, currentUserRole);
+                await this.userCache.clearUserCaches(id);
+                response_1.ResponseUtil.success(res, updatedUser, 'User updated successfully');
+            }
+            catch (error) {
+                next(error);
+            }
+        };
         this.deleteUser = async (req, res, next) => {
             try {
                 const { id } = req.params;
-                await this.userService.deleteUser(id);
+                const currentUserRole = req.user.role;
+                const currentUserId = req.user.id;
+                await this.userService.deleteUser(id, currentUserRole, currentUserId);
                 await this.userCache.clearUserCaches(id);
                 response_1.ResponseUtil.success(res, undefined, 'User deleted successfully');
             }

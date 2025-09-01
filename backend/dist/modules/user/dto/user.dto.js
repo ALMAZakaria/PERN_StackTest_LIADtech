@@ -14,6 +14,7 @@ exports.createUserSchema = zod_1.z.object({
     password: zod_1.z.string().min(8, 'Password must be at least 8 characters'),
     firstName: zod_1.z.string().min(1, 'First name is required'),
     lastName: zod_1.z.string().min(1, 'Last name is required'),
+    role: zod_1.z.enum(['USER', 'ADMIN', 'MODERATOR']).optional(),
 });
 exports.loginUserSchema = zod_1.z.object({
     email: zod_1.z.string().email('Invalid email format'),
@@ -23,6 +24,8 @@ exports.updateUserSchema = zod_1.z.object({
     firstName: zod_1.z.string().min(1, 'First name is required').optional(),
     lastName: zod_1.z.string().min(1, 'Last name is required').optional(),
     email: zod_1.z.string().email('Invalid email format').optional(),
+    role: zod_1.z.enum(['USER', 'ADMIN', 'MODERATOR']).optional(),
+    isActive: zod_1.z.boolean().optional(),
 });
 exports.changePasswordSchema = zod_1.z.object({
     currentPassword: zod_1.z.string().min(1, 'Current password is required'),

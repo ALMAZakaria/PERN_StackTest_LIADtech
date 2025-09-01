@@ -24,16 +24,19 @@ export declare const createUserSchema: z.ZodObject<{
     password: z.ZodString;
     firstName: z.ZodString;
     lastName: z.ZodString;
+    role: z.ZodOptional<z.ZodEnum<["USER", "ADMIN", "MODERATOR"]>>;
 }, "strip", z.ZodTypeAny, {
     firstName: string;
     lastName: string;
     email: string;
     password: string;
+    role?: "USER" | "ADMIN" | "MODERATOR" | undefined;
 }, {
     firstName: string;
     lastName: string;
     email: string;
     password: string;
+    role?: "USER" | "ADMIN" | "MODERATOR" | undefined;
 }>;
 export type CreateUserDto = z.infer<typeof createUserSchema>;
 export declare const loginUserSchema: z.ZodObject<{
@@ -51,14 +54,20 @@ export declare const updateUserSchema: z.ZodObject<{
     firstName: z.ZodOptional<z.ZodString>;
     lastName: z.ZodOptional<z.ZodString>;
     email: z.ZodOptional<z.ZodString>;
+    role: z.ZodOptional<z.ZodEnum<["USER", "ADMIN", "MODERATOR"]>>;
+    isActive: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
+    role?: "USER" | "ADMIN" | "MODERATOR" | undefined;
+    isActive?: boolean | undefined;
 }, {
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
+    role?: "USER" | "ADMIN" | "MODERATOR" | undefined;
+    isActive?: boolean | undefined;
 }>;
 export type UpdateUserDto = z.infer<typeof updateUserSchema>;
 export declare const changePasswordSchema: z.ZodObject<{
@@ -81,15 +90,15 @@ export declare const getUsersQuerySchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     search?: string | undefined;
     role?: "USER" | "ADMIN" | undefined;
+    isActive?: boolean | undefined;
     page?: number | undefined;
     limit?: number | undefined;
-    isActive?: boolean | undefined;
 }, {
     search?: string | undefined;
     role?: "USER" | "ADMIN" | undefined;
+    isActive?: string | undefined;
     page?: string | undefined;
     limit?: string | undefined;
-    isActive?: string | undefined;
 }>;
 export type GetUsersQueryDto = z.infer<typeof getUsersQuerySchema>;
 export declare const userIdParamSchema: z.ZodObject<{

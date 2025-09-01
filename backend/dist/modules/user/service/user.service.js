@@ -45,15 +45,19 @@ class UserService {
             refreshToken,
         };
     }
-    async createUser(userData) {
+    async createUser(userData, currentUserRole) {
         const existingUser = await this.userRepository.findByEmail(userData.email);
         if (existingUser) {
             throw new error_handler_1.ConflictError('User with this email already exists');
+        }
+        if (currentUserRole === 'MODERATOR' && userData.role && userData.role.toUpperCase() !== 'USER') {
+            throw new error_handler_1.AuthorizationError('Moderators can only create USER roles');
         }
         const hashedPassword = await bcryptjs_1.default.hash(userData.password, server_1.config.BCRYPT_ROUNDS);
         const user = await this.userRepository.create({
             ...userData,
             password: hashedPassword,
+            role: (userData.role?.toUpperCase() || 'USER'),
         });
         return this.mapToResponseDto(user);
     }
@@ -122,7 +126,10 @@ class UserService {
         const hashedNewPassword = await bcryptjs_1.default.hash(passwordData.newPassword, server_1.config.BCRYPT_ROUNDS);
         await this.userRepository.updatePassword(userId, hashedNewPassword);
     }
-    async getUsers(query) {
+    async getUsers(query, currentUserRole) {
+        if (currentUserRole === 'MODERATOR') {
+            query.role = 'USER';
+        }
         const result = await this.userRepository.findMany(query);
         return {
             users: result.users.map(user => this.mapToResponseDto(user)),
@@ -141,10 +148,41 @@ class UserService {
         }
         return this.mapToResponseDto(user);
     }
-    async deleteUser(id) {
+    async updateUser(id, updateData, currentUserRole) {
         const user = await this.userRepository.findById(id);
         if (!user) {
             throw new error_handler_1.NotFoundError('User not found');
+        }
+        if (currentUserRole === 'MODERATOR') {
+            if (user.role !== 'USER') {
+                throw new error_handler_1.AuthorizationError('Moderators can only update USER roles');
+            }
+            const { role, isActive, ...allowedFields } = updateData;
+            if (role || isActive !== undefined) {
+                throw new error_handler_1.AuthorizationError('Moderators cannot update role or active status');
+            }
+        }
+        if (updateData.email && updateData.email !== user.email) {
+            const emailExists = await this.userRepository.existsByEmail(updateData.email, id);
+            if (emailExists) {
+                throw new error_handler_1.ConflictError('Email is already in use');
+            }
+        }
+        const updatedUser = await this.userRepository.update(id, updateData);
+        return this.mapToResponseDto(updatedUser);
+    }
+    async deleteUser(id, currentUserRole, currentUserId) {
+        const user = await this.userRepository.findById(id);
+        if (!user) {
+            throw new error_handler_1.NotFoundError('User not found');
+        }
+        if (currentUserRole === 'MODERATOR') {
+            if (user.role !== 'USER') {
+                throw new error_handler_1.AuthorizationError('Moderators can only delete USER roles');
+            }
+        }
+        if (currentUserId && currentUserId === id) {
+            throw new error_handler_1.AuthorizationError('Users cannot delete themselves');
         }
         await this.userRepository.delete(id);
     }

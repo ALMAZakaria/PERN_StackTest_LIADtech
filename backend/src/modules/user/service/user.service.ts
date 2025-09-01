@@ -16,6 +16,7 @@ import {
   NotFoundError,
   ConflictError,
   AuthenticationError,
+  AuthorizationError,
   ValidationError,
 } from '../../../utils/error-handler';
 
@@ -97,7 +98,7 @@ export class UserService {
     const user = await this.userRepository.create({
       ...userData,
       password: hashedPassword,
-      role: userData.role?.toUpperCase() || 'USER', // Use provided role or default to USER
+      role: (userData.role?.toUpperCase() || 'USER') as 'USER' | 'ADMIN' | 'MODERATOR', // Use provided role or default to USER
     });
 
     return this.mapToResponseDto(user);
@@ -239,6 +240,37 @@ export class UserService {
     }
 
     return this.mapToResponseDto(user);
+  }
+
+  async updateUser(id: string, updateData: UpdateUserDto, currentUserRole?: string): Promise<UserResponseDto> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    // Role-based validation
+    if (currentUserRole === 'MODERATOR') {
+      if (user.role !== 'USER') {
+        throw new AuthorizationError('Moderators can only update USER roles');
+      }
+      // Moderators can only update certain fields
+      const { role, isActive, ...allowedFields } = updateData;
+      if (role || isActive !== undefined) {
+        throw new AuthorizationError('Moderators cannot update role or active status');
+      }
+    }
+
+    // Check email uniqueness if email is being updated
+    if (updateData.email && updateData.email !== user.email) {
+      const emailExists = await this.userRepository.existsByEmail(updateData.email, id);
+      if (emailExists) {
+        throw new ConflictError('Email is already in use');
+      }
+    }
+
+    // Update user
+    const updatedUser = await this.userRepository.update(id, updateData);
+    return this.mapToResponseDto(updatedUser);
   }
 
   async deleteUser(id: string, currentUserRole?: string, currentUserId?: string): Promise<void> {
