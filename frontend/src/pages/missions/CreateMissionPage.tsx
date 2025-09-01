@@ -22,6 +22,8 @@ const CreateMissionPage: React.FC = () => {
   const [availableSkills] = useState<string[]>([])
   const [skillInput, setSkillInput] = useState('')
   const [suggestedSkills, setSuggestedSkills] = useState<string[]>([])
+  const [hasCompanyProfile, setHasCompanyProfile] = useState<boolean | null>(null)
+  const [checkingProfile, setCheckingProfile] = useState(true)
 
   const [formData, setFormData] = useState<CreateMissionForm>({
     title: '',
@@ -36,6 +38,7 @@ const CreateMissionPage: React.FC = () => {
 
   useEffect(() => {
     loadAvailableSkills()
+    checkCompanyProfile()
   }, [])
 
   useEffect(() => {
@@ -52,6 +55,23 @@ const CreateMissionPage: React.FC = () => {
       setAvailableSkills(skills)
     } catch (err: any) {
       console.error('Failed to load skills:', err)
+    }
+  }
+
+  const checkCompanyProfile = async () => {
+    try {
+      setCheckingProfile(true)
+      await skillbridgeService.getCompanyProfile()
+      setHasCompanyProfile(true)
+    } catch (err: any) {
+      if (err.response?.status === 404) {
+        setHasCompanyProfile(false)
+      } else {
+        console.error('Failed to check company profile:', err)
+        setHasCompanyProfile(false)
+      }
+    } finally {
+      setCheckingProfile(false)
     }
   }
 
@@ -147,10 +167,73 @@ const CreateMissionPage: React.FC = () => {
         state: { message: 'Mission created successfully!' }
       })
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Failed to create mission')
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to create mission'
+      
+      // Check if it's a company profile error
+      if (errorMessage.includes('Company profile required')) {
+        setError('You need to create a company profile first. Please click "Create Company Profile" below.')
+        setHasCompanyProfile(false)
+      } else {
+        setError(errorMessage)
+      }
     } finally {
       setLoading(false)
     }
+  }
+
+  // Loading state
+  if (loading || checkingProfile) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-indigo-600"></div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show company profile requirement if user doesn't have one
+  if (hasCompanyProfile === false) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="py-8">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+              <div className="mb-6">
+                <svg className="mx-auto h-16 w-16 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Company Profile Required</h2>
+              <p className="text-gray-600 mb-6">
+                You need to create a company profile before you can post missions. This helps freelancers understand your company and project requirements.
+              </p>
+              <div className="space-y-4">
+                <button
+                  onClick={() => navigate('/dashboard/profile')}
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Create Company Profile
+                </button>
+                <div>
+                  <button
+                    onClick={() => navigate('/missions')}
+                    className="text-indigo-600 hover:text-indigo-500 font-medium"
+                  >
+                    ← Back to Missions
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -170,6 +253,16 @@ const CreateMissionPage: React.FC = () => {
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
               <p className="text-red-700">{error}</p>
+              {error.includes('company profile') && (
+                <div className="mt-3">
+                  <button
+                    onClick={() => navigate('/dashboard/profile')}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Create Company Profile
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
