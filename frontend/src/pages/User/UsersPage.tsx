@@ -11,7 +11,8 @@ interface DemoUser extends Omit<User, 'firstName' | 'lastName' | 'role'> {
 const UsersPage: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     role: 'user' as 'user' | 'admin' | 'moderator'
@@ -144,7 +145,7 @@ const UsersPage: React.FC = () => {
         // Demo mode - create user locally
         const newUser: DemoUser = {
           id: String(users.length + 1),
-          name: formData.name,
+          name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
           role: formData.role as string,
           isActive: true,
@@ -155,7 +156,7 @@ const UsersPage: React.FC = () => {
         setUsers([newUser, ...users])
       }
       
-      setFormData({ name: '', email: '', password: '', role: 'user' })
+      setFormData({ firstName: '', lastName: '', email: '', password: '', role: 'user' })
       setShowCreateForm(false)
       
       if (!isBackendConnected) {
@@ -316,20 +317,37 @@ const UsersPage: React.FC = () => {
                 </div>
                 <form onSubmit={handleSubmit} className="px-6 py-4">
                   <div className="space-y-4">
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                        Full Name
-                      </label>
-                      <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="Enter full name"
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                          First Name
+                        </label>
+                        <input
+                          type="text"
+                          id="firstName"
+                          name="firstName"
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="Enter first name"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                          Last Name
+                        </label>
+                        <input
+                          type="text"
+                          id="lastName"
+                          name="lastName"
+                          value={formData.lastName}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="Enter last name"
+                        />
+                      </div>
                     </div>
                     
                     <div>
