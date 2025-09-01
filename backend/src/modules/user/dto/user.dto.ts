@@ -54,7 +54,7 @@ export const getUsersQuerySchema = z.object({
   page: z.string().regex(/^\d+$/).transform(Number).optional(),
   limit: z.string().regex(/^\d+$/).transform(Number).optional(),
   search: z.string().optional(),
-  role: z.enum(['USER', 'ADMIN']).optional(),
+  role: z.enum(['USER', 'ADMIN', 'MODERATOR']).optional(),
   isActive: z.string().transform(val => val === 'true').optional(),
 });
 

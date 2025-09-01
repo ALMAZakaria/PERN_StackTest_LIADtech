@@ -35,7 +35,7 @@ exports.getUsersQuerySchema = zod_1.z.object({
     page: zod_1.z.string().regex(/^\d+$/).transform(Number).optional(),
     limit: zod_1.z.string().regex(/^\d+$/).transform(Number).optional(),
     search: zod_1.z.string().optional(),
-    role: zod_1.z.enum(['USER', 'ADMIN']).optional(),
+    role: zod_1.z.enum(['USER', 'ADMIN', 'MODERATOR']).optional(),
     isActive: zod_1.z.string().transform(val => val === 'true').optional(),
 });
 exports.userIdParamSchema = zod_1.z.object({

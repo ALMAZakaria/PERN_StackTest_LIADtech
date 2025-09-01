@@ -93,7 +93,7 @@ const UsersPage: React.FC = () => {
         page: currentPage,
         limit: 20,
         search: searchTerm || undefined,
-        role: roleFilter || undefined
+        role: roleFilter ? roleFilter.toUpperCase() as 'USER' | 'ADMIN' | 'MODERATOR' : undefined
       })
       
       // Convert API users to demo format
@@ -120,7 +120,7 @@ const UsersPage: React.FC = () => {
         );
       }
       if (roleFilter) {
-        filteredUsers = filteredUsers.filter(user => user.role === roleFilter);
+        filteredUsers = filteredUsers.filter(user => user.role.toLowerCase() === roleFilter.toLowerCase());
       }
       setUsers(filteredUsers)
     } finally {

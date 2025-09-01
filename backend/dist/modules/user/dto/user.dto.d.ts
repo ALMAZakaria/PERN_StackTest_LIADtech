@@ -85,17 +85,17 @@ export declare const getUsersQuerySchema: z.ZodObject<{
     page: z.ZodOptional<z.ZodEffects<z.ZodString, number, string>>;
     limit: z.ZodOptional<z.ZodEffects<z.ZodString, number, string>>;
     search: z.ZodOptional<z.ZodString>;
-    role: z.ZodOptional<z.ZodEnum<["USER", "ADMIN"]>>;
+    role: z.ZodOptional<z.ZodEnum<["USER", "ADMIN", "MODERATOR"]>>;
     isActive: z.ZodOptional<z.ZodEffects<z.ZodString, boolean, string>>;
 }, "strip", z.ZodTypeAny, {
     search?: string | undefined;
-    role?: "USER" | "ADMIN" | undefined;
+    role?: "USER" | "ADMIN" | "MODERATOR" | undefined;
     isActive?: boolean | undefined;
     page?: number | undefined;
     limit?: number | undefined;
 }, {
     search?: string | undefined;
-    role?: "USER" | "ADMIN" | undefined;
+    role?: "USER" | "ADMIN" | "MODERATOR" | undefined;
     isActive?: string | undefined;
     page?: string | undefined;
     limit?: string | undefined;
