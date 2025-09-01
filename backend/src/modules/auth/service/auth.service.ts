@@ -107,11 +107,15 @@ export class AuthService {
       userType,
       companyName,
       industry,
-      companySize,
+      size,
+      description,
+      website,
       skills,
       dailyRate,
       availability,
-      experience
+      experience,
+      location,
+      bio
     } = userData;
 
     // Check if user already exists
@@ -151,23 +155,27 @@ export class AuthService {
       });
 
       // Create profile based on user type
-      if (userType === 'COMPANY' && companyName && industry && companySize) {
+      if (userType === 'COMPANY' && companyName && industry && size) {
         await tx.companyProfile.create({
           data: {
             userId: user.id,
             companyName,
             industry,
-            size: companySize as any,
+            size: size as any,
+            description: description || null,
+            website: website || null,
           }
         });
-      } else if (userType === 'FREELANCER' && skills && dailyRate && availability && experience !== undefined) {
+      } else if (userType === 'FREELANCER' && skills && dailyRate && availability !== undefined && experience !== undefined) {
         await tx.freelanceProfile.create({
           data: {
             userId: user.id,
             skills,
-            dailyRate: new (tx as any).Prisma.Decimal(dailyRate),
+            dailyRate: dailyRate,
             availability,
             experience,
+            bio: bio || null,
+            location: location || null,
           }
         });
       }

@@ -434,11 +434,11 @@ const RegisterPage: React.FC = () => {
                       className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                     >
                       <option value="">Select size</option>
-                      <option value="1-10">1-10 employees</option>
-                      <option value="11-50">11-50 employees</option>
-                      <option value="51-200">51-200 employees</option>
-                      <option value="201-1000">201-1000 employees</option>
-                      <option value="1000+">1000+ employees</option>
+                      <option value="STARTUP">Startup (1-10 employees)</option>
+                      <option value="SMALL">Small (11-50 employees)</option>
+                      <option value="MEDIUM">Medium (51-200 employees)</option>
+                      <option value="LARGE">Large (201-1000 employees)</option>
+                      <option value="ENTERPRISE">Enterprise (1000+ employees)</option>
                     </select>
                   </div>
 

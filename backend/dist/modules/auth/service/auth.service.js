@@ -70,7 +70,7 @@ class AuthService {
         };
     }
     async register(userData) {
-        const { firstName, lastName, email, password, userType, companyName, industry, companySize, skills, dailyRate, availability, experience } = userData;
+        const { firstName, lastName, email, password, userType, companyName, industry, size, description, website, skills, dailyRate, availability, experience, location, bio } = userData;
         const existingUser = await prisma.user.findUnique({
             where: { email }
         });
@@ -99,24 +99,28 @@ class AuthService {
                     createdAt: true,
                 }
             });
-            if (userType === 'COMPANY' && companyName && industry && companySize) {
+            if (userType === 'COMPANY' && companyName && industry && size) {
                 await tx.companyProfile.create({
                     data: {
                         userId: user.id,
                         companyName,
                         industry,
-                        size: companySize,
+                        size: size,
+                        description: description || null,
+                        website: website || null,
                     }
                 });
             }
-            else if (userType === 'FREELANCER' && skills && dailyRate && availability && experience !== undefined) {
+            else if (userType === 'FREELANCER' && skills && dailyRate && availability !== undefined && experience !== undefined) {
                 await tx.freelanceProfile.create({
                     data: {
                         userId: user.id,
                         skills,
-                        dailyRate: new tx.Prisma.Decimal(dailyRate),
+                        dailyRate: dailyRate,
                         availability,
                         experience,
+                        bio: bio || null,
+                        location: location || null,
                     }
                 });
             }

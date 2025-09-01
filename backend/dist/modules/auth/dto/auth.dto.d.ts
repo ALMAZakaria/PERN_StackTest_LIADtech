@@ -23,11 +23,15 @@ export declare const registerSchema: z.ZodObject<{
     userType: z.ZodEnum<["FREELANCER", "COMPANY"]>;
     companyName: z.ZodOptional<z.ZodString>;
     industry: z.ZodOptional<z.ZodString>;
-    companySize: z.ZodOptional<z.ZodEnum<["STARTUP", "SMALL", "MEDIUM", "LARGE", "ENTERPRISE"]>>;
+    size: z.ZodOptional<z.ZodEnum<["STARTUP", "SMALL", "MEDIUM", "LARGE", "ENTERPRISE"]>>;
+    description: z.ZodOptional<z.ZodString>;
+    website: z.ZodOptional<z.ZodString>;
     skills: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
-    dailyRate: z.ZodOptional<z.ZodNumber>;
-    availability: z.ZodOptional<z.ZodNumber>;
-    experience: z.ZodOptional<z.ZodNumber>;
+    dailyRate: z.ZodOptional<z.ZodUnion<[z.ZodNumber, z.ZodEffects<z.ZodEffects<z.ZodString, number, string>, number, string>]>>;
+    availability: z.ZodOptional<z.ZodUnion<[z.ZodNumber, z.ZodEffects<z.ZodEffects<z.ZodString, number, string>, number, string>]>>;
+    experience: z.ZodOptional<z.ZodUnion<[z.ZodNumber, z.ZodEffects<z.ZodEffects<z.ZodString, number, string>, number, string>]>>;
+    location: z.ZodOptional<z.ZodString>;
+    bio: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     firstName: string;
     lastName: string;
@@ -36,11 +40,15 @@ export declare const registerSchema: z.ZodObject<{
     userType: "FREELANCER" | "COMPANY";
     companyName?: string | undefined;
     industry?: string | undefined;
-    companySize?: "STARTUP" | "SMALL" | "MEDIUM" | "LARGE" | "ENTERPRISE" | undefined;
+    size?: "STARTUP" | "SMALL" | "MEDIUM" | "LARGE" | "ENTERPRISE" | undefined;
+    description?: string | undefined;
+    website?: string | undefined;
     skills?: string[] | undefined;
     dailyRate?: number | undefined;
     availability?: number | undefined;
     experience?: number | undefined;
+    location?: string | undefined;
+    bio?: string | undefined;
 }, {
     firstName: string;
     lastName: string;
@@ -49,11 +57,15 @@ export declare const registerSchema: z.ZodObject<{
     userType: "FREELANCER" | "COMPANY";
     companyName?: string | undefined;
     industry?: string | undefined;
-    companySize?: "STARTUP" | "SMALL" | "MEDIUM" | "LARGE" | "ENTERPRISE" | undefined;
+    size?: "STARTUP" | "SMALL" | "MEDIUM" | "LARGE" | "ENTERPRISE" | undefined;
+    description?: string | undefined;
+    website?: string | undefined;
     skills?: string[] | undefined;
-    dailyRate?: number | undefined;
-    availability?: number | undefined;
-    experience?: number | undefined;
+    dailyRate?: string | number | undefined;
+    availability?: string | number | undefined;
+    experience?: string | number | undefined;
+    location?: string | undefined;
+    bio?: string | undefined;
 }>;
 export declare const loginSchema: z.ZodObject<{
     email: z.ZodString;
@@ -79,11 +91,15 @@ export interface RegisterDto {
     userType: 'FREELANCER' | 'COMPANY';
     companyName?: string;
     industry?: string;
-    companySize?: 'STARTUP' | 'SMALL' | 'MEDIUM' | 'LARGE' | 'ENTERPRISE';
+    size?: 'STARTUP' | 'SMALL' | 'MEDIUM' | 'LARGE' | 'ENTERPRISE';
+    description?: string;
+    website?: string;
     skills?: string[];
     dailyRate?: number;
     availability?: number;
     experience?: number;
+    location?: string;
+    bio?: string;
 }
 export interface LoginDto {
     email: string;

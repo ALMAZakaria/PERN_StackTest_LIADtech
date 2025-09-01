@@ -58,7 +58,7 @@ const authController = new AuthController();
  *       500:
  *         description: Internal server error
  */
-router.post('/register', validateRequest(simpleRegisterSchema), authController.simpleRegister);
+router.post('/register', validateRequest({ body: simpleRegisterSchema }), authController.simpleRegister);
 
 /**
  * @swagger
@@ -105,7 +105,7 @@ router.post('/register', validateRequest(simpleRegisterSchema), authController.s
  *       500:
  *         description: Internal server error
  */
-router.post('/register-full', validateRequest(registerSchema), authController.register);
+router.post('/register-full', validateRequest({ body: registerSchema }), authController.register);
 
 /**
  * @swagger
@@ -156,7 +156,7 @@ router.post('/register-full', validateRequest(registerSchema), authController.re
  *       500:
  *         description: Internal server error
  */
-router.post('/login', validateRequest(loginSchema), authController.login);
+router.post('/login', validateRequest({ body: loginSchema }), authController.login);
 
 /**
  * @swagger

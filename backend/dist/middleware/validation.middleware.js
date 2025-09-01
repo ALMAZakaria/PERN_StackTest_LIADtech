@@ -18,20 +18,7 @@ function validateRequest(schema) {
                 }
             }
             else {
-                const validatedData = schema.parse({
-                    body: req.body,
-                    params: req.params,
-                    query: req.query,
-                });
-                if (validatedData.body) {
-                    req.body = validatedData.body;
-                }
-                if (validatedData.params) {
-                    req.params = validatedData.params;
-                }
-                if (validatedData.query) {
-                    req.query = validatedData.query;
-                }
+                req.body = schema.parse(req.body);
             }
             next();
         }

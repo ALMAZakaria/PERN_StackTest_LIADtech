@@ -141,6 +141,7 @@ model Rating {
 enum Role {
   USER
   ADMIN
+  MODERATOR
 }
 
 enum UserType {

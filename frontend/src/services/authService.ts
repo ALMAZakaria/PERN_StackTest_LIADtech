@@ -30,6 +30,14 @@ export interface RegisterData {
 }
 
 class AuthService {
+  // Helper function to safely parse dates
+  private parseDate(dateString: string | null | undefined): Date {
+    if (!dateString) return new Date();
+    
+    const parsed = new Date(dateString);
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
+  }
+
   // Login user
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
@@ -44,8 +52,16 @@ class AuthService {
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('isAuthenticated', 'true');
         
+        // Convert string dates to Date objects for Redux and normalize role
+        const userForRedux = {
+          ...user,
+          role: user.role.toLowerCase() as 'user' | 'admin' | 'moderator',
+          createdAt: this.parseDate(user.createdAt),
+          updatedAt: this.parseDate(user.updatedAt)
+        };
+        
         // Update Redux state
-        store.dispatch(setUser({ user, token }));
+        store.dispatch(setUser({ user: userForRedux, token }));
         
         return response.data.data;
       } else {
@@ -60,14 +76,30 @@ class AuthService {
   // Register new user
   async register(userData: RegisterData): Promise<AuthResponse> {
     try {
-      // Use simple registration endpoint (saves to database)
-      const simpleUserData = {
+      // Use full registration endpoint (saves to database with profile data)
+      const fullUserData = {
         firstName: userData.firstName,
         lastName: userData.lastName,
         email: userData.email,
-        password: userData.password
+        password: userData.password,
+        userType: userData.userType,
+        ...(userData.userType === 'FREELANCER' && {
+          skills: userData.skills || [],
+          experience: userData.experience || 0,
+          dailyRate: userData.dailyRate || 0,
+          availability: userData.availability || '',
+          location: userData.location || '',
+          bio: userData.bio || ''
+        }),
+        ...(userData.userType === 'COMPANY' && {
+          companyName: userData.companyName || '',
+          industry: userData.industry || '',
+          companySize: userData.size || 'STARTUP',
+          description: userData.description || '',
+          website: userData.website || ''
+        })
       };
-      const response = await api.post<ApiResponse<AuthResponse>>('/auth/register', simpleUserData);
+      const response = await api.post<ApiResponse<AuthResponse>>('/auth/register-full', fullUserData);
       
       if (response.data.success && response.data.data) {
         const { user, token, refreshToken } = response.data.data;
@@ -78,8 +110,16 @@ class AuthService {
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('isAuthenticated', 'true');
         
+        // Convert string dates to Date objects for Redux and normalize role
+        const userForRedux = {
+          ...user,
+          role: user.role.toLowerCase() as 'user' | 'admin' | 'moderator',
+          createdAt: this.parseDate(user.createdAt),
+          updatedAt: this.parseDate(user.updatedAt)
+        };
+        
         // Update Redux state
-        store.dispatch(setUser({ user, token }));
+        store.dispatch(setUser({ user: userForRedux, token }));
         
         return response.data.data;
       } else {
