@@ -11,7 +11,6 @@ import {
   ShieldCheckIcon,
   CurrencyDollarIcon
 } from '@heroicons/react/24/outline'
-import '../styles/HomePage.css'
 
 const HomePage: React.FC = () => {
   const features = [
@@ -69,7 +68,16 @@ const HomePage: React.FC = () => {
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        <div 
+          className="absolute inset-0 opacity-5"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(99, 102, 241, 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(99, 102, 241, 0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '20px 20px'
+          }}
+        ></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           <div className="text-center">
             <motion.div
