@@ -74,14 +74,22 @@ const CreateMissionPage: React.FC = () => {
   }
 
   const addSkill = (skill: string) => {
-    if (!formData.requiredSkills.includes(skill)) {
+    const trimmedSkill = skill.trim()
+    if (trimmedSkill && !formData.requiredSkills.includes(trimmedSkill)) {
       setFormData(prev => ({
         ...prev,
-        requiredSkills: [...prev.requiredSkills, skill]
+        requiredSkills: [...prev.requiredSkills, trimmedSkill]
       }))
     }
     setSkillInput('')
     setSuggestedSkills([])
+  }
+
+  const handleSkillInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && skillInput.trim()) {
+      e.preventDefault()
+      addSkill(skillInput.trim())
+    }
   }
 
   const removeSkill = (skillToRemove: string) => {
@@ -200,37 +208,51 @@ const CreateMissionPage: React.FC = () => {
                 />
               </div>
 
-              {/* Required Skills */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Required Skills *
-                </label>
-                <div className="space-y-3">
-                  {/* Skill Input */}
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={skillInput}
-                      onChange={(e) => setSkillInput(e.target.value)}
-                      placeholder="Type to search skills..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                    />
-                    {/* Skill Suggestions */}
-                    {suggestedSkills.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                        {suggestedSkills.map((skill) => (
-                          <button
-                            key={skill}
-                            type="button"
-                            onClick={() => addSkill(skill)}
-                            className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                          >
-                            {skill}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                             {/* Required Skills */}
+               <div>
+                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                   Required Skills *
+                 </label>
+                 <p className="text-sm text-gray-500 mb-3">
+                   Type to search existing skills or enter custom skills. Press Enter or click Add to include a skill.
+                 </p>
+                 <div className="space-y-3">
+                   {/* Skill Input */}
+                   <div className="relative">
+                     <div className="flex">
+                       <input
+                         type="text"
+                         value={skillInput}
+                         onChange={(e) => setSkillInput(e.target.value)}
+                         onKeyPress={handleSkillInputKeyPress}
+                         placeholder="Type to search skills or press Enter to add custom skill..."
+                         className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                       />
+                       <button
+                         type="button"
+                         onClick={() => skillInput.trim() && addSkill(skillInput.trim())}
+                         disabled={!skillInput.trim()}
+                         className="px-4 py-2 bg-indigo-600 text-white border border-indigo-600 rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                       >
+                         Add
+                       </button>
+                     </div>
+                     {/* Skill Suggestions */}
+                     {suggestedSkills.length > 0 && (
+                       <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                         {suggestedSkills.map((skill) => (
+                           <button
+                             key={skill}
+                             type="button"
+                             onClick={() => addSkill(skill)}
+                             className="w-full px-3 py-2 text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                           >
+                             {skill}
+                           </button>
+                         ))}
+                       </div>
+                     )}
+                   </div>
 
                   {/* Selected Skills */}
                   {formData.requiredSkills.length > 0 && (

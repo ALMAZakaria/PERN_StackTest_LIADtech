@@ -49,7 +49,7 @@ const Header: React.FC = () => {
                     {user?.firstName ? `${user.firstName} ${user.lastName}` : user?.email}
                   </div>
                   <div className="text-xs text-gray-500 capitalize">
-                    {user?.role || 'User'}
+                    {user?.role || 'user'}
                   </div>
                 </div>
                 <svg className="ml-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
