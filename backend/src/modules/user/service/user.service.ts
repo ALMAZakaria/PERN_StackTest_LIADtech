@@ -254,9 +254,9 @@ export class UserService {
         throw new AuthorizationError('Moderators can only update USER roles');
       }
       // Moderators can only update certain fields
-      const { role, isActive, ...allowedFields } = updateData;
-      if (role || isActive !== undefined) {
-        throw new AuthorizationError('Moderators cannot update role or active status');
+      const { role, isActive, password, ...allowedFields } = updateData;
+      if (role || isActive !== undefined || password) {
+        throw new AuthorizationError('Moderators cannot update role, active status, or password');
       }
     }
 
@@ -268,8 +268,19 @@ export class UserService {
       }
     }
 
+    // Handle password update if provided
+    let finalUpdateData = { ...updateData };
+    if (updateData.password) {
+      const hashedPassword = await bcrypt.hash(updateData.password, config.BCRYPT_ROUNDS);
+      finalUpdateData = { ...updateData, password: hashedPassword };
+    } else {
+      // Remove password from update data if not provided
+      const { password, ...dataWithoutPassword } = updateData;
+      finalUpdateData = dataWithoutPassword;
+    }
+
     // Update user
-    const updatedUser = await this.userRepository.update(id, updateData);
+    const updatedUser = await this.userRepository.update(id, finalUpdateData);
     return this.mapToResponseDto(updatedUser);
   }
 

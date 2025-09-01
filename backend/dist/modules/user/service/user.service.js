@@ -157,9 +157,9 @@ class UserService {
             if (user.role !== 'USER') {
                 throw new error_handler_1.AuthorizationError('Moderators can only update USER roles');
             }
-            const { role, isActive, ...allowedFields } = updateData;
-            if (role || isActive !== undefined) {
-                throw new error_handler_1.AuthorizationError('Moderators cannot update role or active status');
+            const { role, isActive, password, ...allowedFields } = updateData;
+            if (role || isActive !== undefined || password) {
+                throw new error_handler_1.AuthorizationError('Moderators cannot update role, active status, or password');
             }
         }
         if (updateData.email && updateData.email !== user.email) {
@@ -168,7 +168,16 @@ class UserService {
                 throw new error_handler_1.ConflictError('Email is already in use');
             }
         }
-        const updatedUser = await this.userRepository.update(id, updateData);
+        let finalUpdateData = { ...updateData };
+        if (updateData.password) {
+            const hashedPassword = await bcryptjs_1.default.hash(updateData.password, server_1.config.BCRYPT_ROUNDS);
+            finalUpdateData = { ...updateData, password: hashedPassword };
+        }
+        else {
+            const { password, ...dataWithoutPassword } = updateData;
+            finalUpdateData = dataWithoutPassword;
+        }
+        const updatedUser = await this.userRepository.update(id, finalUpdateData);
         return this.mapToResponseDto(updatedUser);
     }
     async deleteUser(id, currentUserRole, currentUserId) {

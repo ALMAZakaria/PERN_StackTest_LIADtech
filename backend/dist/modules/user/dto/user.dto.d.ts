@@ -54,18 +54,21 @@ export declare const updateUserSchema: z.ZodObject<{
     firstName: z.ZodOptional<z.ZodString>;
     lastName: z.ZodOptional<z.ZodString>;
     email: z.ZodOptional<z.ZodString>;
+    password: z.ZodOptional<z.ZodString>;
     role: z.ZodOptional<z.ZodEnum<["USER", "ADMIN", "MODERATOR"]>>;
     isActive: z.ZodOptional<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
+    password?: string | undefined;
     role?: "USER" | "ADMIN" | "MODERATOR" | undefined;
     isActive?: boolean | undefined;
 }, {
     firstName?: string | undefined;
     lastName?: string | undefined;
     email?: string | undefined;
+    password?: string | undefined;
     role?: "USER" | "ADMIN" | "MODERATOR" | undefined;
     isActive?: boolean | undefined;
 }>;
