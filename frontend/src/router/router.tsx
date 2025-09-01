@@ -4,6 +4,7 @@ import UsersPage from '../pages/User/UsersPage'
 import LoginPage from '../pages/auth/LoginPage'
 import RegisterPage from '../pages/auth/RegisterPage'
 import MissionBoardPage from '../pages/missions/MissionBoardPage'
+import CreateMissionPage from '../pages/missions/CreateMissionPage'
 import SkillBridgeDashboardPage from '../pages/dashboard/SkillBridgeDashboardPage'
 import ProfilePage from '../pages/dashboard/ProfilePage'
 import SettingsPage from '../pages/dashboard/SettingsPage'
@@ -84,12 +85,7 @@ const AppRouter = () => {
         path="/missions/create" 
         element={
           <SimpleProtectedRoute>
-            <div className="min-h-screen flex items-center justify-center">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Create Mission</h2>
-                <p className="text-gray-600">Mission creation form coming soon...</p>
-              </div>
-            </div>
+            <CreateMissionPage />
           </SimpleProtectedRoute>
         } 
       />

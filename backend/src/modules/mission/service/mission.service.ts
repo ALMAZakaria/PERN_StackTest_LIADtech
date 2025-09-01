@@ -30,6 +30,11 @@ export class MissionService {
       throw new AppError('Duration must be greater than 0', 400);
     }
 
+    // Set default urgency if not provided
+    if (!data.urgency) {
+      data.urgency = 'NORMAL';
+    }
+
     // Verify the user has a company profile
     const { CompanyRepository } = await import('../../company/repository/company.repository');
     const companyRepository = new CompanyRepository();

@@ -123,6 +123,13 @@ export enum MissionStatus {
   CANCELLED = 'CANCELLED'
 }
 
+export enum UrgencyLevel {
+  LOW = 'LOW',
+  NORMAL = 'NORMAL',
+  HIGH = 'HIGH',
+  URGENT = 'URGENT'
+}
+
 export interface Mission {
   id: string;
   companyId: string;
@@ -134,6 +141,7 @@ export interface Mission {
   location: string;
   isRemote: boolean;
   status: MissionStatus;
+  urgency: UrgencyLevel;
   createdAt: string;
   updatedAt: string;
   company?: CompanyProfile;

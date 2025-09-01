@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { skillbridgeService } from '../../services/skillbridgeService'
 import { Mission, MissionStatus } from '../../services/api'
 import Header from '../../components/ui/Header'
 
 const MissionBoardPage: React.FC = () => {
+  const location = useLocation()
   const [missions, setMissions] = useState<Mission[]>([])
   const [filteredMissions, setFilteredMissions] = useState<Mission[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   
   // Filters
   const [filters, setFilters] = useState({
@@ -23,7 +25,14 @@ const MissionBoardPage: React.FC = () => {
 
   useEffect(() => {
     loadMissions()
-  }, [])
+    
+    // Check for success message from navigation
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message)
+      // Clear the state to prevent showing the message again on refresh
+      window.history.replaceState({}, document.title)
+    }
+  }, [location.state])
 
   useEffect(() => {
     applyFilters()
@@ -274,6 +283,12 @@ const MissionBoardPage: React.FC = () => {
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
             <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+            <p className="text-green-700">{successMessage}</p>
           </div>
         )}
 
