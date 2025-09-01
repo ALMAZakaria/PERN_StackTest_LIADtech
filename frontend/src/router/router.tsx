@@ -5,6 +5,8 @@ import LoginPage from '../pages/auth/LoginPage'
 import RegisterPage from '../pages/auth/RegisterPage'
 import MissionBoardPage from '../pages/missions/MissionBoardPage'
 import SkillBridgeDashboardPage from '../pages/dashboard/SkillBridgeDashboardPage'
+import ProfilePage from '../pages/dashboard/ProfilePage'
+import SettingsPage from '../pages/dashboard/SettingsPage'
 import ProtectedRoute from '../components/ProtectedRoute'
 import { canAccessUsersManagement } from '../utils/roleUtils'
 
@@ -84,6 +86,22 @@ const AppRouter = () => {
         } 
       />
       <Route 
+        path="/dashboard/profile" 
+        element={
+          <SimpleProtectedRoute>
+            <ProfilePage />
+          </SimpleProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/dashboard/settings" 
+        element={
+          <SimpleProtectedRoute>
+            <SettingsPage />
+          </SimpleProtectedRoute>
+        } 
+      />
+      <Route 
         path="/dashboard/users" 
         element={
           <ProtectedRoute requiredPermission={canAccessUsersManagement}>
@@ -136,12 +154,7 @@ const AppRouter = () => {
         path="/profile" 
         element={
           <SimpleProtectedRoute>
-            <div className="min-h-screen flex items-center justify-center">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Profile</h2>
-                <p className="text-gray-600">Profile management coming soon...</p>
-              </div>
-            </div>
+            <ProfilePage />
           </SimpleProtectedRoute>
         } 
       />
