@@ -5,6 +5,8 @@ import LoginPage from '../pages/auth/LoginPage'
 import RegisterPage from '../pages/auth/RegisterPage'
 import MissionBoardPage from '../pages/missions/MissionBoardPage'
 import SkillBridgeDashboardPage from '../pages/dashboard/SkillBridgeDashboardPage'
+import ProtectedRoute from '../components/ProtectedRoute'
+import { canAccessUsersManagement } from '../utils/roleUtils'
 
 // Simple Home Page
 const HomePage = () => (
@@ -46,8 +48,8 @@ const HomePage = () => (
   </div>
 )
 
-// Protected Route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+// Simple Protected Route component for basic auth
+const SimpleProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   // In a real app, you would check actual authentication state
   const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
   
@@ -76,15 +78,15 @@ const AppRouter = () => {
       <Route 
         path="/dashboard" 
         element={
-          <ProtectedRoute>
+          <SimpleProtectedRoute>
             <SkillBridgeDashboardPage />
-          </ProtectedRoute>
+          </SimpleProtectedRoute>
         } 
       />
       <Route 
         path="/dashboard/users" 
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredPermission={canAccessUsersManagement}>
             <UsersPage />
           </ProtectedRoute>
         } 
@@ -94,53 +96,53 @@ const AppRouter = () => {
       <Route 
         path="/missions/create" 
         element={
-          <ProtectedRoute>
+          <SimpleProtectedRoute>
             <div className="min-h-screen flex items-center justify-center">
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Create Mission</h2>
                 <p className="text-gray-600">Mission creation form coming soon...</p>
               </div>
             </div>
-          </ProtectedRoute>
+          </SimpleProtectedRoute>
         } 
       />
       <Route 
         path="/missions/:id" 
         element={
-          <ProtectedRoute>
+          <SimpleProtectedRoute>
             <div className="min-h-screen flex items-center justify-center">
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Mission Details</h2>
                 <p className="text-gray-600">Mission details page coming soon...</p>
               </div>
             </div>
-          </ProtectedRoute>
+          </SimpleProtectedRoute>
         } 
       />
       <Route 
         path="/applications" 
         element={
-          <ProtectedRoute>
+          <SimpleProtectedRoute>
             <div className="min-h-screen flex items-center justify-center">
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Applications</h2>
                 <p className="text-gray-600">Applications management coming soon...</p>
               </div>
             </div>
-          </ProtectedRoute>
+          </SimpleProtectedRoute>
         } 
       />
       <Route 
         path="/profile" 
         element={
-          <ProtectedRoute>
+          <SimpleProtectedRoute>
             <div className="min-h-screen flex items-center justify-center">
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Profile</h2>
                 <p className="text-gray-600">Profile management coming soon...</p>
               </div>
             </div>
-          </ProtectedRoute>
+          </SimpleProtectedRoute>
         } 
       />
       

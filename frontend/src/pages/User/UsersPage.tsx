@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { User } from '../../services/api'
+import { useAppSelector } from '../../hooks/hooks'
+import { 
+  getRolePermissions, 
+  getAvailableRolesForUser, 
+  canDeleteUser,
+  canManageRole 
+} from '../../utils/roleUtils'
 
 // Local interface for demo data that includes name
 interface DemoUser extends Omit<User, 'firstName' | 'lastName' | 'role'> {
@@ -9,6 +16,7 @@ interface DemoUser extends Omit<User, 'firstName' | 'lastName' | 'role'> {
 }
 
 const UsersPage: React.FC = () => {
+  const currentUser = useAppSelector(state => state.auth.user)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [formData, setFormData] = useState({
     firstName: '',
@@ -189,6 +197,24 @@ const UsersPage: React.FC = () => {
       console.error('Delete user error:', error)
       setError(error.message || 'Failed to delete user')
     }
+  }
+
+  // Check if current user has permission to access this page
+  if (!currentUser || !getRolePermissions(currentUser.role).canManageUsers) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+          <p className="text-gray-600 mb-4">You don't have permission to access user management.</p>
+          <Link 
+            to="/dashboard" 
+            className="text-indigo-600 hover:text-indigo-500 font-medium"
+          >
+            Return to Dashboard
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   const handleLogout = async () => {
@@ -393,9 +419,11 @@ const UsersPage: React.FC = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       >
-                        <option value="user">User</option>
-                        <option value="moderator">Moderator</option>
-                        <option value="admin">Admin</option>
+                        {currentUser && getAvailableRolesForUser(currentUser.role).map(role => (
+                          <option key={role} value={role.toLowerCase()}>
+                            {role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
@@ -569,12 +597,14 @@ const UsersPage: React.FC = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <button className="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
-                            <button 
-                              onClick={() => handleDeleteUser(user.id)}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Delete {!isBackendConnected && '(Demo)'}
-                            </button>
+                            {currentUser && canDeleteUser(currentUser.role, user.role) && (
+                              <button 
+                                onClick={() => handleDeleteUser(user.id)}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                Delete {!isBackendConnected && '(Demo)'}
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))}

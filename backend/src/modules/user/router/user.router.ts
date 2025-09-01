@@ -373,7 +373,7 @@ router.post('/change-password',
  */
 router.get('/',
   authenticateToken,
-  authorizeRoles('ADMIN'),
+  authorizeRoles('ADMIN', 'MODERATOR'),
   validateRequest({ query: getUsersQuerySchema }),
   userController.getUsers
 );
@@ -421,7 +421,7 @@ router.get('/',
  */
 router.post('/create',
   authenticateToken,
-  authorizeRoles('ADMIN'),
+  authorizeRoles('ADMIN', 'MODERATOR'),
   validateRequest({ body: simpleCreateUserSchema }),
   userController.simpleCreateUser
 );
@@ -485,7 +485,7 @@ router.get('/:id',
  */
 router.delete('/:id',
   authenticateToken,
-  authorizeRoles('ADMIN'),
+  authorizeRoles('ADMIN', 'MODERATOR'),
   validateRequest({ params: userIdParamSchema }),
   userController.deleteUser
 );

@@ -78,11 +78,16 @@ export class UserService {
     };
   }
 
-  async createUser(userData: CreateUserDto): Promise<UserResponseDto> {
+  async createUser(userData: CreateUserDto, currentUserRole?: string): Promise<UserResponseDto> {
     // Check if user already exists
     const existingUser = await this.userRepository.findByEmail(userData.email);
     if (existingUser) {
       throw new ConflictError('User with this email already exists');
+    }
+
+    // Role-based validation
+    if (currentUserRole === 'MODERATOR' && userData.role && userData.role.toUpperCase() !== 'USER') {
+      throw new AuthorizationError('Moderators can only create USER roles');
     }
 
     // Hash password
@@ -92,6 +97,7 @@ export class UserService {
     const user = await this.userRepository.create({
       ...userData,
       password: hashedPassword,
+      role: userData.role?.toUpperCase() || 'USER', // Use provided role or default to USER
     });
 
     return this.mapToResponseDto(user);
@@ -198,7 +204,7 @@ export class UserService {
     await this.userRepository.updatePassword(userId, hashedNewPassword);
   }
 
-  async getUsers(query: GetUsersQueryDto): Promise<{
+  async getUsers(query: GetUsersQueryDto, currentUserRole?: string): Promise<{
     users: UserResponseDto[];
     meta: {
       total: number;
@@ -207,6 +213,12 @@ export class UserService {
       totalPages: number;
     };
   }> {
+    // Apply role-based filtering for MODERATOR users
+    if (currentUserRole === 'MODERATOR') {
+      // Moderators can only see USER roles
+      query.role = 'USER';
+    }
+    
     const result = await this.userRepository.findMany(query);
     
     return {
@@ -229,10 +241,22 @@ export class UserService {
     return this.mapToResponseDto(user);
   }
 
-  async deleteUser(id: string): Promise<void> {
+  async deleteUser(id: string, currentUserRole?: string, currentUserId?: string): Promise<void> {
     const user = await this.userRepository.findById(id);
     if (!user) {
       throw new NotFoundError('User not found');
+    }
+
+    // Role-based validation
+    if (currentUserRole === 'MODERATOR') {
+      if (user.role !== 'USER') {
+        throw new AuthorizationError('Moderators can only delete USER roles');
+      }
+    }
+
+    // Prevent users from deleting themselves
+    if (currentUserId && currentUserId === id) {
+      throw new AuthorizationError('Users cannot delete themselves');
     }
 
     await this.userRepository.delete(id);

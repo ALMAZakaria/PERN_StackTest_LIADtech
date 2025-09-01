@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { authService } from '../../services/authService'
 import { UserType } from '../../services/api'
+import { getRedirectPathByRole } from '../../utils/roleUtils'
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
@@ -96,8 +97,10 @@ const RegisterPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!validateForm()) return
-    
+    if (!validateForm()) {
+      return
+    }
+
     setIsLoading(true)
     setError('')
 
@@ -110,8 +113,8 @@ const RegisterPage: React.FC = () => {
         userType: formData.userType,
         ...(formData.userType === UserType.FREELANCER && {
           skills: formData.skills,
-          experience: formData.experience,
-          dailyRate: formData.dailyRate,
+          experience: Number(formData.experience),
+          dailyRate: Number(formData.dailyRate),
           availability: formData.availability,
           location: formData.location,
           bio: formData.bio
@@ -125,13 +128,14 @@ const RegisterPage: React.FC = () => {
         })
       }
 
-      await authService.register(registerData)
+      const response = await authService.register(registerData)
       
       setSuccess(true)
       
-      // Redirect to dashboard after successful registration
+      // Redirect based on user role
+      const redirectPath = getRedirectPathByRole(response.user.role)
       setTimeout(() => {
-        navigate('/dashboard')
+        navigate(redirectPath)
       }, 2000)
       
     } catch (error: any) {

@@ -117,10 +117,11 @@ export class UserController {
   };
 
   // Admin endpoints
-  createUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  createUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const userData: CreateUserDto = req.body;
-      const newUser = await this.userService.createUser(userData);
+      const currentUserRole = req.user!.role;
+      const newUser = await this.userService.createUser(userData, currentUserRole);
 
       ResponseUtil.created(res, newUser, 'User created successfully');
     } catch (error) {
@@ -128,18 +129,19 @@ export class UserController {
     }
   };
 
-  getUsers = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  getUsers = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const query: GetUsersQueryDto = req.query as any;
+      const currentUserRole = req.user!.role;
       
-      // Create cache key from query
-      const cacheKey = JSON.stringify(query);
+      // Create cache key from query and user role
+      const cacheKey = JSON.stringify({ ...query, userRole: currentUserRole });
       
       // Try to get from cache first
       let result = await this.userCache.getUserList(cacheKey);
       
       if (!result) {
-        result = await this.userService.getUsers(query);
+        result = await this.userService.getUsers(query, currentUserRole);
         // Cache the result
         await this.userCache.setUserList(cacheKey, result);
       }
@@ -169,11 +171,13 @@ export class UserController {
     }
   };
 
-  deleteUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  deleteUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;
+      const currentUserRole = req.user!.role;
+      const currentUserId = req.user!.id;
 
-      await this.userService.deleteUser(id);
+      await this.userService.deleteUser(id, currentUserRole, currentUserId);
       
       // Clear cache
       await this.userCache.clearUserCaches(id);

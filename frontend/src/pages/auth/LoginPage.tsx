@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { getRedirectPathByRole } from '../../utils/roleUtils'
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate()
@@ -28,25 +29,30 @@ const LoginPage: React.FC = () => {
       // Check for demo credentials first
       if (formData.email === 'admin@demo.com' && formData.password === 'demo123') {
         // Store demo authentication
-        localStorage.setItem('token', 'demo-token')
-        localStorage.setItem('user', JSON.stringify({
+        const demoUser = {
           id: '1',
           name: 'Admin User',
           email: 'admin@demo.com',
           role: 'admin'
-        }))
+        }
+        localStorage.setItem('token', 'demo-token')
+        localStorage.setItem('user', JSON.stringify(demoUser))
         localStorage.setItem('isAuthenticated', 'true')
         
-        // Navigate to dashboard
-        navigate('/demo')
+        // Navigate based on role
+        const redirectPath = getRedirectPathByRole(demoUser.role)
+        navigate(redirectPath)
         return
       }
 
       // Try to use the auth service (will be available when backend is running)
       try {
         const { authService } = await import('../../services/authService')
-        await authService.login(formData)
-        navigate('/demo')
+        const response = await authService.login(formData)
+        
+        // Navigate based on user role
+        const redirectPath = getRedirectPathByRole(response.user.role)
+        navigate(redirectPath)
       } catch (importError) {
         console.warn('Auth service not available, using demo mode:', importError)
         setError('Backend server not running. Use demo credentials: admin@demo.com / demo123')
