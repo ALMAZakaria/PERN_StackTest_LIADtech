@@ -69,12 +69,21 @@ const Header: React.FC = () => {
                       Your Profile
                     </Link>
                     <Link
-                      to={user?.role === 'ADMIN' || user?.role === 'MODERATOR' ? '/ManagerDashboard' : '/dashboard'}
+                      to="/dashboard"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setUserMenuOpen(false)}
                     >
                       Dashboard
                     </Link>
+                    {(user?.role === 'ADMIN' || user?.role === 'MODERATOR') && (
+                      <Link
+                        to="/ManagerDashboard"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        Manager Dashboard
+                      </Link>
+                    )}
                     <Link
                       to="/dashboard/settings"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
