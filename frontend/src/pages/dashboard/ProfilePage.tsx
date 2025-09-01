@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { authService } from '../../services/authService'
+import { skillbridgeService } from '../../services/skillbridgeService'
 import { User, UserType } from '../../services/api'
 import Header from '../../components/ui/Header'
 
@@ -7,6 +8,9 @@ const ProfilePage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -28,28 +32,56 @@ const ProfilePage: React.FC = () => {
     loadUserProfile()
   }, [])
 
-  const loadUserProfile = () => {
+  const loadUserProfile = async () => {
     try {
       const currentUser = authService.getCurrentUser()
       setUser(currentUser)
       
       if (currentUser) {
-        setFormData({
+        // Set basic user info
+        setFormData(prev => ({
+          ...prev,
           firstName: currentUser.firstName || '',
           lastName: currentUser.lastName || '',
-          email: currentUser.email || '',
-          bio: currentUser.bio || '',
-          location: currentUser.location || '',
-          skills: currentUser.skills || [],
-          experience: currentUser.experience || 0,
-          dailyRate: currentUser.dailyRate || 0,
-          availability: currentUser.availability || '',
-          companyName: currentUser.companyName || '',
-          industry: currentUser.industry || '',
-          companySize: currentUser.companySize || '',
-          description: currentUser.description || '',
-          website: currentUser.website || ''
-        })
+          email: currentUser.email || ''
+        }))
+
+        // Load profile data based on user type
+        if (currentUser.userType === UserType.FREELANCER) {
+          try {
+            const freelanceProfile = await skillbridgeService.getFreelanceProfile()
+            setFormData(prev => ({
+              ...prev,
+              bio: freelanceProfile.bio || '',
+              location: freelanceProfile.location || '',
+              skills: freelanceProfile.skills || [],
+              experience: freelanceProfile.experience || 0,
+              dailyRate: freelanceProfile.dailyRate || 0,
+              availability: freelanceProfile.availability || ''
+            }))
+          } catch (err: any) {
+            if (err.response?.status !== 404) {
+              console.error('Error loading freelance profile:', err)
+            }
+          }
+        } else if (currentUser.userType === UserType.COMPANY) {
+          try {
+            const companyProfile = await skillbridgeService.getCompanyProfile()
+            setFormData(prev => ({
+              ...prev,
+              location: companyProfile.location || '',
+              companyName: companyProfile.companyName || '',
+              industry: companyProfile.industry || '',
+              companySize: companyProfile.size || '',
+              description: companyProfile.description || '',
+              website: companyProfile.website || ''
+            }))
+          } catch (err: any) {
+            if (err.response?.status !== 404) {
+              console.error('Error loading company profile:', err)
+            }
+          }
+        }
       }
     } catch (error) {
       console.error('Error loading user profile:', error)
@@ -59,11 +91,20 @@ const ProfilePage: React.FC = () => {
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    const { name, value, type } = e.target
+    
+    // Handle number inputs
+    if (type === 'number') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value === '' ? 0 : Number(value)
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
   }
 
   const handleSkillsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,9 +117,107 @@ const ProfilePage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement profile update API call
-    console.log('Profile update data:', formData)
-    setIsEditing(false)
+    setSaving(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      if (user?.userType === UserType.COMPANY) {
+        // Validate required fields
+        if (!formData.companyName.trim()) {
+          setError('Company name is required')
+          return
+        }
+        if (!formData.industry.trim()) {
+          setError('Industry is required')
+          return
+        }
+        if (!formData.companySize) {
+          setError('Company size is required')
+          return
+        }
+
+        // Create or update company profile
+        const companyProfileData = {
+          companyName: formData.companyName.trim(),
+          industry: formData.industry.trim(),
+          size: formData.companySize as 'STARTUP' | 'SMALL' | 'MEDIUM' | 'LARGE' | 'ENTERPRISE',
+          description: formData.description?.trim() || undefined,
+          website: formData.website?.trim() || undefined,
+          location: formData.location?.trim() || undefined
+        }
+
+        try {
+          // Try to create first (in case profile doesn't exist)
+          console.log('Attempting to create company profile with data:', companyProfileData)
+          await skillbridgeService.createCompanyProfile(companyProfileData)
+          setSuccess('Company profile created successfully!')
+        } catch (err: any) {
+          console.log('Create failed with error:', err.response?.status, err.response?.data?.message)
+          if (err.response?.status === 400 && err.response?.data?.message?.includes('already exists')) {
+            // Profile already exists, update it
+            console.log('Profile already exists, updating company profile with data:', companyProfileData)
+            await skillbridgeService.updateCompanyProfile(companyProfileData)
+            setSuccess('Company profile updated successfully!')
+          } else {
+            throw err
+          }
+        }
+      } else if (user?.userType === UserType.FREELANCER) {
+        // Validate required fields for freelancer
+        if (formData.skills.length === 0) {
+          setError('At least one skill is required')
+          return
+        }
+        if (formData.dailyRate <= 0) {
+          setError('Daily rate must be greater than 0')
+          return
+        }
+        if (formData.availability <= 0 || formData.availability > 168) {
+          setError('Availability must be between 1 and 168 hours per week')
+          return
+        }
+        if (formData.experience < 0) {
+          setError('Experience cannot be negative')
+          return
+        }
+
+        // Create or update freelance profile
+        const freelanceProfileData = {
+          skills: formData.skills,
+          experience: formData.experience,
+          dailyRate: formData.dailyRate,
+          availability: formData.availability,
+          bio: formData.bio?.trim() || undefined,
+          location: formData.location?.trim() || undefined
+        }
+
+        try {
+          // Try to create first (in case profile doesn't exist)
+          console.log('Attempting to create freelance profile with data:', freelanceProfileData)
+          await skillbridgeService.createFreelanceProfile(freelanceProfileData)
+          setSuccess('Freelance profile created successfully!')
+        } catch (err: any) {
+          console.log('Create failed with error:', err.response?.status, err.response?.data?.message)
+          if (err.response?.status === 400 && err.response?.data?.message?.includes('already exists')) {
+            // Profile already exists, update it
+            console.log('Profile already exists, updating freelance profile with data:', freelanceProfileData)
+            await skillbridgeService.updateFreelanceProfile(freelanceProfileData)
+            setSuccess('Freelance profile updated successfully!')
+          } else {
+            throw err
+          }
+        }
+      }
+
+      setIsEditing(false)
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to save profile'
+      console.error('Profile save error:', err)
+      setError(errorMessage)
+    } finally {
+      setSaving(false)
+    }
   }
 
   if (loading) {
@@ -116,6 +255,20 @@ const ProfilePage: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
           <p className="mt-2 text-gray-600">Manage your account information and preferences.</p>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {success && (
+          <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+            <p className="text-green-700">{success}</p>
+          </div>
+        )}
 
         <div className="bg-white shadow rounded-lg">
           {/* Profile Header */}
@@ -262,20 +415,19 @@ const ProfilePage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Availability</label>
-                    <select
+                    <label className="block text-sm font-medium text-gray-700">Availability (hours per week)</label>
+                    <input
+                      type="number"
                       name="availability"
                       value={formData.availability}
                       onChange={handleInputChange}
                       disabled={!isEditing}
+                      min="1"
+                      max="168"
+                      placeholder="40"
                       className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 text-gray-900 disabled:bg-gray-50 disabled:text-gray-500"
-                    >
-                      <option value="">Select availability</option>
-                      <option value="FULL_TIME">Full Time</option>
-                      <option value="PART_TIME">Part Time</option>
-                      <option value="CONTRACT">Contract</option>
-                      <option value="FREELANCE">Freelance</option>
-                    </select>
+                    />
+                    <p className="mt-1 text-sm text-gray-500">Enter hours per week (1-168)</p>
                   </div>
                 </>
               )}
@@ -362,9 +514,17 @@ const ProfilePage: React.FC = () => {
               <div className="mt-8 flex justify-end">
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  disabled={saving}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Save Changes
+                  {saving ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Saving...
+                    </div>
+                  ) : (
+                    'Save Changes'
+                  )}
                 </button>
               </div>
             )}
