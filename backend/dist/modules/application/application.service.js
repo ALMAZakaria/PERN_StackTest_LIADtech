@@ -85,23 +85,44 @@ class ApplicationService {
             throw new AppError_1.AppError('Application not found', 404);
         }
         const { CompanyRepository } = await Promise.resolve().then(() => __importStar(require('../company/repository/company.repository')));
+        const { FreelanceRepository } = await Promise.resolve().then(() => __importStar(require('../freelance/repository/freelance.repository')));
         const companyRepository = new CompanyRepository();
+        const freelanceRepository = new FreelanceRepository();
         const companyProfile = await companyRepository.findByUserId(userId);
+        const freelanceProfile = await freelanceRepository.findByUserId(userId);
         const isCompanyOwner = companyProfile && application.companyId === companyProfile.id;
-        if (application.freelancerId !== userId && !isCompanyOwner) {
+        const isFreelancerOwner = freelanceProfile && application.freelancerId === freelanceProfile.id;
+        if (!isFreelancerOwner && !isCompanyOwner) {
             throw new AppError_1.AppError('Not authorized to update this application', 403);
         }
-        if (application.freelancerId !== userId && (data.proposal || data.proposedRate)) {
+        if (isFreelancerOwner) {
+            if (data.proposal !== undefined && !data.proposal.trim()) {
+                throw new AppError_1.AppError('Proposal cannot be empty', 400);
+            }
+            if (data.proposedRate !== undefined && data.proposedRate <= 0) {
+                throw new AppError_1.AppError('Proposed rate must be positive', 400);
+            }
+        }
+        if (!isFreelancerOwner && (data.proposal || data.proposedRate)) {
             throw new AppError_1.AppError('Only freelancer can update proposal and rate', 403);
         }
-        if (!isCompanyOwner && data.status) {
-            throw new AppError_1.AppError('Only company can update application status', 403);
-        }
-        if (data.proposal !== undefined && !data.proposal.trim()) {
-            throw new AppError_1.AppError('Proposal cannot be empty', 400);
-        }
-        if (data.proposedRate !== undefined && data.proposedRate <= 0) {
-            throw new AppError_1.AppError('Proposed rate must be positive', 400);
+        if (data.status) {
+            if (data.status === 'WITHDRAWN') {
+                if (!isFreelancerOwner) {
+                    throw new AppError_1.AppError('Only freelancer can withdraw their own application', 403);
+                }
+                if (application.status !== 'PENDING') {
+                    throw new AppError_1.AppError('Only pending applications can be withdrawn', 400);
+                }
+            }
+            else if (['ACCEPTED', 'REJECTED'].includes(data.status)) {
+                if (!isCompanyOwner) {
+                    throw new AppError_1.AppError('Only company can accept or reject applications', 403);
+                }
+                if (application.status !== 'PENDING') {
+                    throw new AppError_1.AppError('Only pending applications can be accepted or rejected', 400);
+                }
+            }
         }
         return this.applicationRepository.update(id, data);
     }

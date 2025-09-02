@@ -36,6 +36,8 @@ const corsOptions = {
             callback(null, true);
         }
         else {
+            console.log(`CORS blocked origin: ${origin}`);
+            console.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
             callback(new Error('Not allowed by CORS'));
         }
     },
@@ -102,6 +104,10 @@ if (server_1.config.SWAGGER_ENABLED) {
                 },
             },
             servers: [
+                {
+                    url: `https://pern-stack-test-lia-dtech-vg4f.vercel.app/api/${server_1.config.API_VERSION}`,
+                    description: 'Production server',
+                },
                 {
                     url: `http://localhost:${server_1.config.PORT}/api/${server_1.config.API_VERSION}`,
                     description: 'Development server',
