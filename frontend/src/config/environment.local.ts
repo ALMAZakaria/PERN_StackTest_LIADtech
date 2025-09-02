@@ -3,7 +3,7 @@
 
 export const environment = {
   development: {
-    apiBaseUrl: 'http://localhost:5000/api/v1',
+    apiBaseUrl: 'https://pern-stacktest-liadtech-1.onrender.com/api/v1', // Updated to production
     appEnv: 'development'
   },
   production: {
