@@ -5,6 +5,7 @@ import { RootState } from '../../state/store';
 import applicationService from '../../services/applicationService';
 import { Application, ApplicationStatus } from '../../services/api';
 import Header from '../../components/ui/Header';
+import { formatDateTime } from '../../utils/dateUtils';
 
 const ApplicationDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -86,13 +87,7 @@ const ApplicationDetailsPage: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return formatDateTime(dateString);
   };
 
   const formatCurrency = (amount: number) => {

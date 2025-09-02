@@ -9,6 +9,7 @@ import applicationService, {
 } from '../../services/applicationService';
 import { Application, ApplicationStatus } from '../../services/api';
 import Header from '../../components/ui/Header';
+import { formatDate } from '../../utils/dateUtils';
 
 const ApplicationsPage: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -134,14 +135,6 @@ const ApplicationsPage: React.FC = () => {
         {config.text}
       </span>
     );
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
   };
 
   const formatCurrency = (amount: number) => {

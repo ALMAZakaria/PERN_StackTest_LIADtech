@@ -8,8 +8,8 @@ export interface User {
   role: string
   userType: string
   isActive: boolean
-  createdAt: Date
-  updatedAt: Date
+  createdAt: string
+  updatedAt: string
 }
 
 interface AuthState {

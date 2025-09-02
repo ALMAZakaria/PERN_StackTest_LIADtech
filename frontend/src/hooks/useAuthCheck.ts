@@ -19,13 +19,8 @@ export const useAuthCheck = () => {
           const token = authService.getToken()
           
           if (user && token) {
-            // Convert string dates to Date objects for Redux
-            const userForRedux = {
-              ...user,
-              createdAt: new Date(user.createdAt),
-              updatedAt: new Date(user.updatedAt)
-            }
-            dispatch(setUser({ user: userForRedux, token }))
+            // Keep dates as strings for Redux serialization
+            dispatch(setUser({ user, token }))
           } else {
             // Clear invalid auth data
             authService.clearAuthData()
