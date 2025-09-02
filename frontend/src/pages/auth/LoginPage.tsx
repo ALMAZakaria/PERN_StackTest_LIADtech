@@ -184,8 +184,8 @@ const LoginPage: React.FC = () => {
           <div className="mt-6 p-4 bg-blue-50 rounded-md">
             <h4 className="text-sm font-medium text-blue-800 mb-2">Demo Credentials:</h4>
             <p className="text-sm text-blue-600">
-              Email: <code className="bg-blue-100 px-1 rounded">admin@demo.com</code><br />
-              Password: <code className="bg-blue-100 px-1 rounded">demo123</code>
+              Email: <code className="bg-blue-100 px-1 rounded">test@demo.com</code><br />
+              Password: <code className="bg-blue-100 px-1 rounded">demo123456</code>
             </p>
           </div>
 
