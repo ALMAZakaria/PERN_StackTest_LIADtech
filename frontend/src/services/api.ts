@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { API_BASE_URL } from '../config/environment';
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://pern-stack-test-lia-dtech-vg4f.vercel.app/api/v1';
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
