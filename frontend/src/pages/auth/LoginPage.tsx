@@ -56,7 +56,7 @@ const LoginPage: React.FC = () => {
         navigate(redirectPath)
       } catch (importError) {
         console.warn('Auth service not available, using demo mode:', importError)
-        setError('Backend server not running. Use demo credentials: admin@demo.com / demo123')
+        setError('Backend server not running. Use demo credentials: test@demo.com / demo123456')
       }
     } catch (error: any) {
       console.error('Login error:', error)

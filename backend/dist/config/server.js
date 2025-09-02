@@ -17,7 +17,7 @@ exports.config = {
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
     JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'fallback-refresh-secret',
     JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
-    CORS_ORIGIN: process.env.CORS_ORIGIN || 'https://pern-stack-test-lia-dtech-vg4f.vercel.app,http://localhost:3000',
+    CORS_ORIGIN: process.env.CORS_ORIGIN || 'https://skillbridge-sand.vercel.app,http://localhost:3000',
     RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
     RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000', 10),
     LOG_LEVEL: process.env.LOG_LEVEL || 'info',

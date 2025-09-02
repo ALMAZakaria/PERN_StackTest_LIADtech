@@ -69,6 +69,31 @@ app.use(express_1.default.urlencoded({ extended: true, limit: '10mb' }));
 app.use((0, compression_1.default)());
 app.use(logger_middleware_1.requestLogger);
 app.use(logger_middleware_1.securityLogger);
+app.get('/', (req, res) => {
+    response_1.ResponseUtil.success(res, {
+        message: 'Welcome to PERN Stack Backend API',
+        version: '1.0.0',
+        status: 'running',
+        timestamp: new Date().toISOString(),
+        environment: server_1.config.NODE_ENV,
+        endpoints: {
+            health: '/health',
+            api: `/api/${server_1.config.API_VERSION}`,
+            documentation: '/api-docs',
+            auth: `/api/${server_1.config.API_VERSION}/auth`,
+            users: `/api/${server_1.config.API_VERSION}/users`,
+            dashboard: `/api/${server_1.config.API_VERSION}/dashboard`,
+            freelance: `/api/${server_1.config.API_VERSION}/freelance`,
+            missions: `/api/${server_1.config.API_VERSION}/missions`,
+            company: `/api/${server_1.config.API_VERSION}/company`,
+            skills: `/api/${server_1.config.API_VERSION}/skills`,
+            portfolio: `/api/${server_1.config.API_VERSION}/portfolio`,
+            applications: `/api/${server_1.config.API_VERSION}/applications`,
+            ratings: `/api/${server_1.config.API_VERSION}/ratings`,
+            notifications: `/api/${server_1.config.API_VERSION}/notifications`
+        }
+    }, 'API is running successfully');
+});
 app.get('/health', (req, res) => {
     response_1.ResponseUtil.success(res, {
         status: 'OK',
@@ -76,6 +101,16 @@ app.get('/health', (req, res) => {
         uptime: process.uptime(),
         environment: server_1.config.NODE_ENV,
     }, 'Server is healthy');
+});
+app.get('/status', (req, res) => {
+    response_1.ResponseUtil.success(res, {
+        status: 'operational',
+        service: 'pern-backend',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: server_1.config.NODE_ENV,
+        version: '1.0.0'
+    }, 'Service is operational');
 });
 const apiRouter = express_1.default.Router();
 apiRouter.use('/auth', auth_router_1.default);
@@ -105,7 +140,7 @@ if (server_1.config.SWAGGER_ENABLED) {
             },
             servers: [
                 {
-                    url: `https://pern-stack-test-lia-dtech-vg4f.vercel.app/api/${server_1.config.API_VERSION}`,
+                    url: `https://skillbridge-sand.vercel.app/api/${server_1.config.API_VERSION}`,
                     description: 'Production server',
                 },
                 {
@@ -123,7 +158,7 @@ if (server_1.config.SWAGGER_ENABLED) {
                 },
             },
         },
-        apis: ['./src/modules/*/router/*.ts', './src/modules/*/*.ts'],
+        apis: ['./src/modules/*/router/*.ts', './src/modules/*/*.ts', './src/app.ts'],
     };
     const swaggerSpec = (0, swagger_jsdoc_1.default)(swaggerOptions);
     app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(swaggerSpec));
