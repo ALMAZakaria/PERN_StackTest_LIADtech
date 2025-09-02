@@ -43,6 +43,10 @@ const missionController = new MissionController();
  *                 type: string
  *               isRemote:
  *                 type: boolean
+ *               urgency:
+ *                 type: string
+ *                 enum: [LOW, NORMAL, HIGH, URGENT]
+ *                 description: Urgency level of the mission
  *     responses:
  *       201:
  *         description: Mission created successfully
@@ -159,6 +163,10 @@ router.get('/:id', missionController.getMission);
  *               status:
  *                 type: string
  *                 enum: [OPEN, IN_PROGRESS, COMPLETED, CANCELLED]
+ *               urgency:
+ *                 type: string
+ *                 enum: [LOW, NORMAL, HIGH, URGENT]
+ *                 description: Urgency level of the mission
  *     responses:
  *       200:
  *         description: Mission updated successfully

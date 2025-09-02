@@ -1,15 +1,18 @@
 import api, { ApiResponse, User } from './api';
 
 export interface CreateUserData {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   role: 'user' | 'admin' | 'moderator';
 }
 
 export interface UpdateUserData {
-  name?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
+  password?: string;
   role?: string;
   isActive?: boolean;
 }
@@ -47,11 +50,11 @@ class UserService {
       if (response.data.success && response.data.data) {
         return {
           users: response.data.data,
-          meta: response.data.meta || {
-            page: params.page || 1,
-            limit: params.limit || 20,
-            total: response.data.data.length,
-            totalPages: 1
+          meta: {
+            page: response.data.meta?.page || params.page || 1,
+            limit: response.data.meta?.limit || params.limit || 20,
+            total: response.data.meta?.total || response.data.data.length,
+            totalPages: response.data.meta?.totalPages || 1
           }
         };
       } else {

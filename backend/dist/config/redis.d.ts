@@ -297,7 +297,7 @@ declare class RedisClient {
             RESERVE: typeof import("@redis/bloom/dist/commands/top-k/RESERVE");
             reserve: typeof import("@redis/bloom/dist/commands/top-k/RESERVE");
         };
-    } & import("redis").RedisModules, import("redis").RedisFunctions, import("redis").RedisScripts>;
+    } & import("redis").RedisModules, import("redis").RedisFunctions, import("redis").RedisScripts> | null;
 }
 declare const redisClient: RedisClient;
 export default redisClient;

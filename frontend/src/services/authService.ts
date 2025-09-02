@@ -1,4 +1,8 @@
-import api, { ApiResponse, AuthResponse, User } from './api';
+import api, { ApiResponse, AuthResponse, User, UserType } from './api';
+
+// Import store to dispatch actions
+import { store } from '../state/store';
+import { setUser, clearAuth } from '../state/slices/slice';
 
 export interface LoginCredentials {
   email: string;
@@ -6,24 +10,58 @@ export interface LoginCredentials {
 }
 
 export interface RegisterData {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
+  userType: UserType;
+  // Optional profile-specific fields
+  skills?: string[];
+  experience?: number;
+  dailyRate?: number;
+  availability?: string;
+  location?: string;
+  bio?: string;
+  companyName?: string;
+  industry?: string;
+  size?: string;
+  description?: string;
+  website?: string;
 }
 
 class AuthService {
+  // Helper function to safely parse dates
+  private parseDate(dateString: string | null | undefined): Date {
+    if (!dateString) return new Date();
+    
+    const parsed = new Date(dateString);
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
+  }
+
   // Login user
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const response = await api.post<ApiResponse<AuthResponse>>('/auth/login', credentials);
       
       if (response.data.success && response.data.data) {
-        const { user, token } = response.data.data;
+        const { user, token, refreshToken } = response.data.data;
         
-        // Store user data and token in localStorage
+        // Store user data and tokens in localStorage
         localStorage.setItem('token', token);
+        localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('isAuthenticated', 'true');
+        
+        // Convert string dates to Date objects for Redux and normalize role
+        const userForRedux = {
+          ...user,
+          role: user.role.toLowerCase() as 'user' | 'admin' | 'moderator',
+          createdAt: this.parseDate(user.createdAt),
+          updatedAt: this.parseDate(user.updatedAt)
+        };
+        
+        // Update Redux state
+        store.dispatch(setUser({ user: userForRedux, token }));
         
         return response.data.data;
       } else {
@@ -38,15 +76,50 @@ class AuthService {
   // Register new user
   async register(userData: RegisterData): Promise<AuthResponse> {
     try {
-      const response = await api.post<ApiResponse<AuthResponse>>('/auth/register', userData);
+      // Use full registration endpoint (saves to database with profile data)
+      const fullUserData = {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        password: userData.password,
+        userType: userData.userType,
+        ...(userData.userType === 'FREELANCER' && {
+          skills: userData.skills || [],
+          experience: userData.experience || 0,
+          dailyRate: userData.dailyRate || 0,
+          availability: userData.availability || '',
+          location: userData.location || '',
+          bio: userData.bio || ''
+        }),
+        ...(userData.userType === 'COMPANY' && {
+          companyName: userData.companyName || '',
+          industry: userData.industry || '',
+          companySize: userData.size || 'STARTUP',
+          description: userData.description || '',
+          website: userData.website || ''
+        })
+      };
+      const response = await api.post<ApiResponse<AuthResponse>>('/auth/register-full', fullUserData);
       
       if (response.data.success && response.data.data) {
-        const { user, token } = response.data.data;
+        const { user, token, refreshToken } = response.data.data;
         
-        // Store user data and token in localStorage
+        // Store user data and tokens in localStorage
         localStorage.setItem('token', token);
+        localStorage.setItem('refreshToken', refreshToken);
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('isAuthenticated', 'true');
+        
+        // Convert string dates to Date objects for Redux and normalize role
+        const userForRedux = {
+          ...user,
+          role: user.role.toLowerCase() as 'user' | 'admin' | 'moderator',
+          createdAt: this.parseDate(user.createdAt),
+          updatedAt: this.parseDate(user.updatedAt)
+        };
+        
+        // Update Redux state
+        store.dispatch(setUser({ user: userForRedux, token }));
         
         return response.data.data;
       } else {
@@ -67,8 +140,12 @@ class AuthService {
     } finally {
       // Clear local storage regardless of API call success
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
       localStorage.removeItem('isAuthenticated');
+      
+      // Update Redux state
+      store.dispatch(clearAuth());
     }
   }
 
@@ -95,9 +172,15 @@ class AuthService {
     return localStorage.getItem('token');
   }
 
+  // Get stored refresh token
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
+  }
+
   // Clear all auth data
   clearAuthData(): void {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     localStorage.removeItem('isAuthenticated');
   }

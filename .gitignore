@@ -3,8 +3,12 @@
 # npm
 node_modules
 npm-shrinkwrap.json
+test
 *.log
 *.gz
 *.env
 .env.backup
 .docker-compose.yml
+*.test.ts
+jest.setup.js
+jest.config.js

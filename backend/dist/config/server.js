@@ -19,7 +19,7 @@ exports.config = {
     JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '30d',
     CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000',
     RATE_LIMIT_WINDOW_MS: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
-    RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
+    RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000', 10),
     LOG_LEVEL: process.env.LOG_LEVEL || 'info',
     LOG_FILE: process.env.LOG_FILE || './logs/app.log',
     SWAGGER_ENABLED: process.env.SWAGGER_ENABLED === 'true',

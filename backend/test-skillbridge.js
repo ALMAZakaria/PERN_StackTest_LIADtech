@@ -114,6 +114,127 @@ app.get('/api/v1/company/profile', (req, res) => {
   });
 });
 
+app.get('/api/v1/skills', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Skills endpoint working',
+    data: [
+      'React', 'Node.js', 'TypeScript', 'Python', 'JavaScript', 'PostgreSQL',
+      'AWS', 'Docker', 'MongoDB', 'Express.js', 'Vue.js', 'Angular'
+    ]
+  });
+});
+
+app.get('/api/v1/skills/search', (req, res) => {
+  const query = req.query.query || '';
+  const skills = ['React', 'Node.js', 'TypeScript', 'Python', 'JavaScript'];
+  const filtered = skills.filter(skill => 
+    skill.toLowerCase().includes(query.toLowerCase())
+  );
+  
+  res.json({
+    success: true,
+    message: 'Skills search working',
+    data: filtered
+  });
+});
+
+app.get('/api/v1/portfolio/user/my-portfolio', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Portfolio endpoint working',
+    data: [
+      {
+        id: 'project-1',
+        title: 'E-commerce Platform',
+        description: 'Modern e-commerce platform built with React and Node.js',
+        technologies: ['React', 'Node.js', 'PostgreSQL'],
+        imageUrl: 'https://example.com/project1.jpg',
+        projectUrl: 'https://project1.com'
+      },
+      {
+        id: 'project-2',
+        title: 'Task Management App',
+        description: 'Collaborative task management application',
+        technologies: ['Vue.js', 'Express.js', 'MongoDB'],
+        imageUrl: 'https://example.com/project2.jpg',
+        projectUrl: 'https://project2.com'
+      }
+    ]
+  });
+});
+
+app.get('/api/v1/applications/user/my-applications', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Applications endpoint working',
+    data: [
+      {
+        id: 'app-1',
+        missionId: 'mission-1',
+        status: 'PENDING',
+        proposal: 'I am excited to work on this React project. I have 5+ years of experience with React and TypeScript.',
+        proposedRate: 500,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'app-2',
+        missionId: 'mission-2',
+        status: 'ACCEPTED',
+        proposal: 'I have extensive experience with Node.js and financial APIs. I can deliver this project on time.',
+        proposedRate: 600,
+        createdAt: new Date().toISOString()
+      }
+    ]
+  });
+});
+
+app.get('/api/v1/ratings/user/my-ratings', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Ratings endpoint working',
+    data: [
+      {
+        id: 'rating-1',
+        rating: 5,
+        comment: 'Excellent work! Very professional and delivered on time.',
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'rating-2',
+        rating: 4,
+        comment: 'Good communication and quality work.',
+        createdAt: new Date().toISOString()
+      }
+    ]
+  });
+});
+
+app.get('/api/v1/notifications', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Notifications endpoint working',
+    data: [
+      {
+        id: 'notif-1',
+        type: 'APPLICATION_RECEIVED',
+        title: 'New Application Received',
+        message: 'Alex Developer has applied to your mission: "React Developer Needed"',
+        isRead: false,
+        createdAt: new Date().toISOString()
+      },
+      {
+        id: 'notif-2',
+        type: 'MISSION_COMPLETED',
+        title: 'Mission Completed',
+        message: 'Congratulations! Your mission "E-commerce Platform" has been completed',
+        isRead: true,
+        createdAt: new Date().toISOString()
+      }
+    ]
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 SkillBridge Pro Test Server running on http://localhost:${PORT}`);
@@ -122,6 +243,12 @@ app.listen(PORT, () => {
   console.log(`🏢 Company Profile: http://localhost:${PORT}/api/v1/company/profile`);
   console.log(`🎯 Missions: http://localhost:${PORT}/api/v1/missions`);
   console.log(`🔍 Search Freelancers: http://localhost:${PORT}/api/v1/freelance/search`);
+  console.log(`💼 Skills: http://localhost:${PORT}/api/v1/skills`);
+  console.log(`🔍 Skills Search: http://localhost:${PORT}/api/v1/skills/search`);
+  console.log(`📁 Portfolio: http://localhost:${PORT}/api/v1/portfolio/user/my-portfolio`);
+  console.log(`📝 Applications: http://localhost:${PORT}/api/v1/applications/user/my-applications`);
+  console.log(`⭐ Ratings: http://localhost:${PORT}/api/v1/ratings/user/my-ratings`);
+  console.log(`🔔 Notifications: http://localhost:${PORT}/api/v1/notifications`);
 });
 
 module.exports = app;

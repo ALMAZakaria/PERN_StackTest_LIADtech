@@ -7,14 +7,15 @@ async function main() {
   console.log('🌱 Starting database seeding...');
 
   // Create sample users
-  const hashedPassword = await bcrypt.hash('password123', 12);
+  const adminPassword = await bcrypt.hash('demo123', 12);
+  const userPassword = await bcrypt.hash('demo123', 12);
 
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@example.com' },
+    where: { email: 'admin@demo.com' },
     update: {},
     create: {
-      email: 'admin@example.com',
-      password: hashedPassword,
+      email: 'admin@demo.com',
+      password: adminPassword,
       firstName: 'Admin',
       lastName: 'User',
       role: 'ADMIN',
@@ -22,11 +23,11 @@ async function main() {
   });
 
   const regularUser = await prisma.user.upsert({
-    where: { email: 'user@example.com' },
+    where: { email: 'john@example.com' },
     update: {},
     create: {
-      email: 'user@example.com',
-      password: hashedPassword,
+      email: 'john@example.com',
+      password: userPassword,
       firstName: 'John',
       lastName: 'Doe',
       role: 'USER',
@@ -41,7 +42,7 @@ async function main() {
     update: {},
     create: {
       email: 'freelancer@skillbridge.com',
-      password: hashedPassword,
+      password: userPassword,
       firstName: 'Alex',
       lastName: 'Developer',
       role: 'USER',
@@ -54,7 +55,7 @@ async function main() {
     update: {},
     create: {
       email: 'company@skillbridge.com',
-      password: hashedPassword,
+      password: userPassword,
       firstName: 'Sarah',
       lastName: 'Manager',
       role: 'USER',

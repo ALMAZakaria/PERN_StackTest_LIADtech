@@ -9,6 +9,7 @@ import {
   changePasswordSchema,
   getUsersQuerySchema,
   userIdParamSchema,
+  simpleCreateUserSchema,
 } from '../dto/user.dto';
 
 const router = Router();
@@ -372,7 +373,7 @@ router.post('/change-password',
  */
 router.get('/',
   authenticateToken,
-  authorizeRoles('ADMIN'),
+  authorizeRoles('ADMIN', 'MODERATOR'),
   validateRequest({ query: getUsersQuerySchema }),
   userController.getUsers
 );
@@ -407,7 +408,7 @@ router.get('/',
  *                 minLength: 6
  *               role:
  *                 type: string
- *                 enum: [USER, ADMIN]
+ *                 enum: [user, admin, moderator]
  *     responses:
  *       201:
  *         description: User created successfully
@@ -420,9 +421,9 @@ router.get('/',
  */
 router.post('/create',
   authenticateToken,
-  authorizeRoles('ADMIN'),
-  validateRequest({ body: createUserSchema }),
-  userController.createUser
+  authorizeRoles('ADMIN', 'MODERATOR'),
+  validateRequest({ body: simpleCreateUserSchema }),
+  userController.simpleCreateUser
 );
 
 /**
@@ -460,6 +461,59 @@ router.get('/:id',
 /**
  * @swagger
  * /users/{id}:
+ *   put:
+ *     summary: Update user (Admin only)
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               role:
+ *                 type: string
+ *                 enum: [USER, ADMIN, MODERATOR]
+ *               isActive:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden
+ *       404:
+ *         description: User not found
+ */
+router.put('/:id',
+  authenticateToken,
+  authorizeRoles('ADMIN', 'MODERATOR'),
+  validateRequest({ params: userIdParamSchema, body: updateUserSchema }),
+  userController.updateUser
+);
+
+/**
+ * @swagger
+ * /users/{id}:
  *   delete:
  *     summary: Delete user (Admin only)
  *     tags: [Users]
@@ -484,7 +538,7 @@ router.get('/:id',
  */
 router.delete('/:id',
   authenticateToken,
-  authorizeRoles('ADMIN'),
+  authorizeRoles('ADMIN', 'MODERATOR'),
   validateRequest({ params: userIdParamSchema }),
   userController.deleteUser
 );

@@ -82,6 +82,9 @@ class UserCache {
     async clearUserListCaches() {
         try {
             const client = redis_1.default.getClient();
+            if (!client) {
+                return;
+            }
             const keys = await client.keys(`${this.USER_LIST_KEY_PREFIX}*`);
             if (keys.length > 0) {
                 await client.del(keys);

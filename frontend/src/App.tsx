@@ -1,3 +1,5 @@
+// src/App.tsx
+import React from 'react'
 import { BrowserRouter } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { RootState } from './state/store'
@@ -12,8 +14,9 @@ function App() {
 
   if (isLoading || authState.isInitializing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
         <LoadingSpinner size="lg" />
+        <p className="mt-4 text-gray-600">Checking authentication...</p>
       </div>
     )
   }
@@ -22,11 +25,19 @@ function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <div className="min-h-screen bg-gray-50">
-          <AppRouter />
+          <React.Suspense
+            fallback={
+              <div className="flex items-center justify-center min-h-screen bg-gray-50">
+                <LoadingSpinner size="lg" />
+              </div>
+            }
+          >
+            <AppRouter />
+          </React.Suspense>
         </div>
       </BrowserRouter>
     </ErrorBoundary>
   )
 }
 
-export default App 
+export default App

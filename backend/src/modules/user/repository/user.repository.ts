@@ -1,11 +1,23 @@
 import { User, Prisma } from '@prisma/client';
 import prisma from '../../../config/prisma';
-import { CreateUserDto, UpdateUserDto, GetUsersQueryDto } from '../dto/user.dto';
+import { CreateUserDto, UpdateUserDto, GetUsersQueryDto, SimpleCreateUserDto } from '../dto/user.dto';
 
 export class UserRepository {
   async create(data: CreateUserDto & { password: string }): Promise<User> {
     return await prisma.user.create({
       data,
+    });
+  }
+
+  async createWithRole(data: { email: string; password: string; firstName: string; lastName: string; role: string }): Promise<User> {
+    return await prisma.user.create({
+      data: {
+        email: data.email,
+        password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        role: data.role.toUpperCase() as any,
+      },
     });
   }
 
@@ -98,14 +110,6 @@ export class UserRepository {
     });
   }
 
-  async exists(id: string): Promise<boolean> {
-    const user = await prisma.user.findUnique({
-      where: { id },
-      select: { id: true },
-    });
-    return !!user;
-  }
-
   async existsByEmail(email: string, excludeId?: string): Promise<boolean> {
     const where: Prisma.UserWhereInput = { email };
     
@@ -113,11 +117,7 @@ export class UserRepository {
       where.NOT = { id: excludeId };
     }
 
-    const user = await prisma.user.findFirst({
-      where,
-      select: { id: true },
-    });
-    
-    return !!user;
+    const count = await prisma.user.count({ where });
+    return count > 0;
   }
 } 

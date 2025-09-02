@@ -3,6 +3,7 @@ import { AuthRequest } from '../../../middleware/auth.middleware';
 export declare class AuthController {
     private authService;
     constructor();
+    simpleRegister: (req: Request, res: Response, next: NextFunction) => Promise<void>;
     register: (req: Request, res: Response, next: NextFunction) => Promise<void>;
     login: (req: Request, res: Response, next: NextFunction) => Promise<void>;
     logout: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;

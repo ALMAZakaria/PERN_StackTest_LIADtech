@@ -5,6 +5,16 @@ const auth_service_1 = require("../service/auth.service");
 const response_1 = require("../../../utils/response");
 class AuthController {
     constructor() {
+        this.simpleRegister = async (req, res, next) => {
+            try {
+                const userData = req.body;
+                const result = await this.authService.simpleRegister(userData);
+                response_1.ResponseUtil.created(res, result, 'User registered successfully');
+            }
+            catch (error) {
+                next(error);
+            }
+        };
         this.register = async (req, res, next) => {
             try {
                 const userData = req.body;

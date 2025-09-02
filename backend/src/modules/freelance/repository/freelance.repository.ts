@@ -44,7 +44,7 @@ export class FreelanceRepository {
             isActive: true,
           },
         },
-        portfolio: true,
+        portfolio_projects: true,
       },
     });
   }
@@ -117,7 +117,7 @@ export class FreelanceRepository {
             isActive: true,
           },
         },
-        portfolio: {
+        portfolio_projects: {
           take: 3, // Limit to 3 portfolio items for list view
         },
       },
