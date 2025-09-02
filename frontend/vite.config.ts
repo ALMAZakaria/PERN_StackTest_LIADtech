@@ -27,7 +27,7 @@ export default defineConfig({
     /*
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://pern-stacktest-liadtech-1.onrender.com',
         changeOrigin: true,
       },
     },
