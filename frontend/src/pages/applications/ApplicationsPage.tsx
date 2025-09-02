@@ -12,7 +12,7 @@ import Header from '../../components/ui/Header';
 import { formatDate } from '../../utils/dateUtils';
 
 const ApplicationsPage: React.FC = () => {
-  const { user } = useSelector((state: RootState) => state.auth);
+  // const { user } = useSelector((state: RootState) => state.auth);
   const [applications, setApplications] = useState<Application[]>([]);
   const [stats, setStats] = useState<ApplicationStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -497,10 +497,19 @@ const ApplicationsPage: React.FC = () => {
                       </button>
                       {application.status === ApplicationStatus.PENDING && (
                         <button
-                          onClick={() => {
-                            // Handle withdraw application
+                          onClick={async () => {
                             if (confirm('Are you sure you want to withdraw this application?')) {
-                              // TODO: Implement withdraw functionality
+                              try {
+                                await applicationService.updateApplication(application.id, {
+                                  status: ApplicationStatus.WITHDRAWN
+                                });
+                                // Reload applications to reflect the change
+                                await loadApplications();
+                                await loadStats();
+                              } catch (err) {
+                                console.error('Error withdrawing application:', err);
+                                alert('Failed to withdraw application. Please try again.');
+                              }
                             }
                           }}
                           className="text-red-600 hover:text-red-900"
