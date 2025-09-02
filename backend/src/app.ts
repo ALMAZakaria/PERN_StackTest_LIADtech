@@ -170,7 +170,7 @@ if (config.SWAGGER_ENABLED) {
       },
       servers: [
         {
-          url: `https://pern-stack-test-lia-dtech-vg4f.vercel.app/api/${config.API_VERSION}`,
+          url: `https://skillbridge-sand.vercel.app/api/${config.API_VERSION}`,
           description: 'Production server',
         },
         {
