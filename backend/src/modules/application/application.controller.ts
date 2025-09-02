@@ -213,10 +213,16 @@ export class ApplicationController {
 
   getApplicationStats = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
+      console.log('getApplicationStats called with user:', req.user);
       const userId = req.user!.id;
+      console.log('Getting stats for userId:', userId);
+      
       const stats = await this.applicationService.getApplicationStats(userId);
+      console.log('Stats retrieved successfully:', stats);
+      
       ResponseUtil.success(res, stats, 'Application statistics retrieved successfully');
     } catch (error) {
+      console.error('Error in getApplicationStats controller:', error);
       next(error);
     }
   };
