@@ -86,6 +86,33 @@ app.use(compression());
 app.use(requestLogger);
 app.use(securityLogger);
 
+// Root endpoint
+app.get('/', (req, res) => {
+  ResponseUtil.success(res, {
+    message: 'Welcome to PERN Stack Backend API',
+    version: '1.0.0',
+    status: 'running',
+    timestamp: new Date().toISOString(),
+    environment: config.NODE_ENV,
+    endpoints: {
+      health: '/health',
+      api: `/api/${config.API_VERSION}`,
+      documentation: '/api-docs',
+      auth: `/api/${config.API_VERSION}/auth`,
+      users: `/api/${config.API_VERSION}/users`,
+      dashboard: `/api/${config.API_VERSION}/dashboard`,
+      freelance: `/api/${config.API_VERSION}/freelance`,
+      missions: `/api/${config.API_VERSION}/missions`,
+      company: `/api/${config.API_VERSION}/company`,
+      skills: `/api/${config.API_VERSION}/skills`,
+      portfolio: `/api/${config.API_VERSION}/portfolio`,
+      applications: `/api/${config.API_VERSION}/applications`,
+      ratings: `/api/${config.API_VERSION}/ratings`,
+      notifications: `/api/${config.API_VERSION}/notifications`
+    }
+  }, 'API is running successfully');
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   ResponseUtil.success(res, {
@@ -94,6 +121,18 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
     environment: config.NODE_ENV,
   }, 'Server is healthy');
+});
+
+// Status endpoint for monitoring
+app.get('/status', (req, res) => {
+  ResponseUtil.success(res, {
+    status: 'operational',
+    service: 'pern-backend',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: config.NODE_ENV,
+    version: '1.0.0'
+  }, 'Service is operational');
 });
 
 // API routes
@@ -149,7 +188,7 @@ if (config.SWAGGER_ENABLED) {
         },
       },
     },
-    apis: ['./src/modules/*/router/*.ts', './src/modules/*/*.ts'],
+          apis: ['./src/modules/*/router/*.ts', './src/modules/*/*.ts', './src/app.ts'],
   };
 
   const swaggerSpec = swaggerJsdoc(swaggerOptions);
