@@ -110,3 +110,80 @@ export const getRedirectPathByRole = (userRole: string): string => {
       return '/dashboard'
   }
 }
+
+// Application management role utilities
+export const canAccessApplications = (user: any): boolean => {
+  return user && (user.userType === 'FREELANCER' || user.userType === 'COMPANY');
+};
+
+export const canViewOwnApplications = (user: any): boolean => {
+  return user && (user.userType === 'FREELANCER' || user.userType === 'COMPANY');
+};
+
+export const canViewCompanyApplications = (user: any): boolean => {
+  return user && user.userType === 'COMPANY';
+};
+
+export const canUpdateApplicationStatus = (user: any, application: any): boolean => {
+  if (!user || !application) return false;
+  
+  // Company can update status of applications to their missions
+  if (user.userType === 'COMPANY') {
+    return application.company?.userId === user.id;
+  }
+  
+  // Freelancer can only update their own applications (withdraw)
+  if (user.userType === 'FREELANCER') {
+    return application.freelancer?.userId === user.id;
+  }
+  
+  return false;
+};
+
+export const canWithdrawApplication = (user: any, application: any): boolean => {
+  if (!user || !application) return false;
+  
+  // Only freelancers can withdraw their own applications
+  if (user.userType === 'FREELANCER') {
+    return application.freelancer?.userId === user.id && application.status === 'PENDING';
+  }
+  
+  return false;
+};
+
+export const canAcceptRejectApplication = (user: any, application: any): boolean => {
+  if (!user || !application) return false;
+  
+  // Only companies can accept/reject applications to their missions
+  if (user.userType === 'COMPANY') {
+    return application.company?.userId === user.id && application.status === 'PENDING';
+  }
+  
+  return false;
+};
+
+export const getApplicationPageTitle = (user: any): string => {
+  if (!user) return 'Applications';
+  
+  switch (user.userType) {
+    case 'FREELANCER':
+      return 'My Applications';
+    case 'COMPANY':
+      return 'Mission Applications';
+    default:
+      return 'Applications';
+  }
+};
+
+export const getApplicationPageDescription = (user: any): string => {
+  if (!user) return 'Manage your applications';
+  
+  switch (user.userType) {
+    case 'FREELANCER':
+      return 'Track and manage your mission applications';
+    case 'COMPANY':
+      return 'Review and manage applications for your posted missions';
+    default:
+      return 'Manage your applications';
+  }
+};

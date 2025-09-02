@@ -14,7 +14,10 @@ import ProtectedRoute from '../components/ProtectedRoute'
 import { canAccessUsersManagement } from '../utils/roleUtils'
 import Header from '../components/ui/Header'
 
-
+// Import new application pages
+import ApplicationsPage from '../pages/applications/ApplicationsPage'
+import CompanyApplicationsPage from '../pages/applications/CompanyApplicationsPage'
+import ApplicationDetailsPage from '../pages/applications/ApplicationDetailsPage'
 
 // Simple Protected Route component for basic auth
 const SimpleProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -23,6 +26,23 @@ const SimpleProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />
+  }
+  
+  return <>{children}</>
+}
+
+// Role-based route component for applications
+const ApplicationsRoute = ({ children }: { children: React.ReactNode }) => {
+  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true'
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+  
+  // Check if user has a profile (freelancer or company)
+  if (!user.userType || (user.userType !== 'FREELANCER' && user.userType !== 'COMPANY')) {
+    return <Navigate to="/dashboard" replace />
   }
   
   return <>{children}</>
@@ -98,19 +118,33 @@ const AppRouter = () => {
           </SimpleProtectedRoute>
         } 
       />
+      
+      {/* Application Management Routes */}
       <Route 
         path="/applications" 
         element={
-          <SimpleProtectedRoute>
-            <div className="min-h-screen flex items-center justify-center">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Applications</h2>
-                <p className="text-gray-600">Applications management coming soon...</p>
-              </div>
-            </div>
-          </SimpleProtectedRoute>
+          <ApplicationsRoute>
+            <ApplicationsPage />
+          </ApplicationsRoute>
         } 
       />
+      <Route 
+        path="/applications/company" 
+        element={
+          <ApplicationsRoute>
+            <CompanyApplicationsPage />
+          </ApplicationsRoute>
+        } 
+      />
+      <Route 
+        path="/applications/:id" 
+        element={
+          <ApplicationsRoute>
+            <ApplicationDetailsPage />
+          </ApplicationsRoute>
+        } 
+      />
+      
       <Route 
         path="/profile" 
         element={

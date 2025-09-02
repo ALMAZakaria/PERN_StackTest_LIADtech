@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAppSelector, useAppDispatch } from '../../hooks/hooks'
 import { clearAuth } from '../../state/slices/slice'
 import { authService } from '../../services/authService'
+import { canAccessApplications } from '../../utils/roleUtils'
 
 const Header: React.FC = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -27,6 +28,26 @@ const Header: React.FC = () => {
               SkillBridge
             </Link>
           </div>
+          
+          {/* Navigation links for authenticated users */}
+          {isAuthenticated && user && (
+            <nav className="hidden md:flex ml-10 space-x-8">
+              <Link
+                to="/missions"
+                className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+              >
+                Missions
+              </Link>
+              {canAccessApplications(user) && (
+                <Link
+                  to="/applications"
+                  className="text-gray-700 hover:text-indigo-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                >
+                  Applications
+                </Link>
+              )}
+            </nav>
+          )}
         </div>
 
         {/* Right side - User menu or Auth buttons */}
@@ -75,6 +96,15 @@ const Header: React.FC = () => {
                     >
                       Dashboard
                     </Link>
+                    {canAccessApplications(user) && (
+                      <Link
+                        to="/applications"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        Applications
+                      </Link>
+                    )}
                     {(user?.role === 'ADMIN' || user?.role === 'MODERATOR') && (
                       <Link
                         to="/ManagerDashboard"

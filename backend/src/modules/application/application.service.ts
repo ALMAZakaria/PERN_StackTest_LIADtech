@@ -1,4 +1,4 @@
-import { ApplicationRepository, CreateApplicationData, UpdateApplicationData } from './application.repository';
+import { ApplicationRepository, CreateApplicationData, UpdateApplicationData, ApplicationFilters, PaginationOptions, PaginatedResult } from './application.repository';
 import { AppError } from '../../utils/AppError';
 
 // Interface for creating application from frontend
@@ -177,5 +177,133 @@ export class ApplicationService {
     status?: string;
   }): Promise<any[]> {
     return this.applicationRepository.findMany(filters);
+  }
+
+  async getUserApplicationsWithPagination(
+    userId: string,
+    filters?: ApplicationFilters,
+    pagination?: PaginationOptions
+  ): Promise<PaginatedResult<any>> {
+    // Check if user is freelancer or company
+    const { FreelanceRepository } = await import('../freelance/repository/freelance.repository');
+    const { CompanyRepository } = await import('../company/repository/company.repository');
+    
+    const freelanceRepository = new FreelanceRepository();
+    const companyRepository = new CompanyRepository();
+    
+    const freelanceProfile = await freelanceRepository.findByUserId(userId);
+    const companyProfile = await companyRepository.findByUserId(userId);
+
+    if (freelanceProfile) {
+      return this.applicationRepository.findManyWithPagination(
+        { ...filters, freelancerId: freelanceProfile.id },
+        pagination
+      );
+    } else if (companyProfile) {
+      return this.applicationRepository.findManyWithPagination(
+        { ...filters, companyId: companyProfile.id },
+        pagination
+      );
+    } else {
+      // Return empty result if no profile exists
+      return {
+        data: [],
+        meta: {
+          page: pagination?.page || 1,
+          limit: pagination?.limit || 10,
+          total: 0,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false,
+        },
+      };
+    }
+  }
+
+  async getMissionApplicationsWithPagination(
+    missionId: string,
+    userId: string,
+    filters?: ApplicationFilters,
+    pagination?: PaginationOptions
+  ): Promise<PaginatedResult<any>> {
+    // Verify the user owns the mission
+    const { MissionRepository } = await import('../mission/repository/mission.repository');
+    const missionRepository = new MissionRepository();
+    const mission = await missionRepository.findById(missionId);
+    
+    if (!mission) {
+      throw new AppError('Mission not found', 404);
+    }
+
+    // Get company profile to verify ownership
+    const { CompanyRepository } = await import('../company/repository/company.repository');
+    const companyRepository = new CompanyRepository();
+    const companyProfile = await companyRepository.findByUserId(userId);
+    
+    if (!companyProfile || mission.companyId !== companyProfile.id) {
+      throw new AppError('Not authorized to view applications for this mission', 403);
+    }
+
+    return this.applicationRepository.findManyWithPagination(
+      { ...filters, missionId },
+      pagination
+    );
+  }
+
+  async searchApplicationsWithPagination(
+    filters?: ApplicationFilters,
+    pagination?: PaginationOptions
+  ): Promise<PaginatedResult<any>> {
+    return this.applicationRepository.findManyWithPagination(filters, pagination);
+  }
+
+  async getApplicationStats(userId: string): Promise<any> {
+    const { FreelanceRepository } = await import('../freelance/repository/freelance.repository');
+    const { CompanyRepository } = await import('../company/repository/company.repository');
+    
+    const freelanceRepository = new FreelanceRepository();
+    const companyRepository = new CompanyRepository();
+    
+    const freelanceProfile = await freelanceRepository.findByUserId(userId);
+    const companyProfile = await companyRepository.findByUserId(userId);
+
+    if (freelanceProfile) {
+      // Get stats for freelancer
+      const applications = await this.applicationRepository.findByFreelancerId(freelanceProfile.id);
+      
+      return {
+        total: applications.length,
+        pending: applications.filter(app => app.status === 'PENDING').length,
+        accepted: applications.filter(app => app.status === 'ACCEPTED').length,
+        rejected: applications.filter(app => app.status === 'REJECTED').length,
+        withdrawn: applications.filter(app => app.status === 'WITHDRAWN').length,
+        averageRate: applications.length > 0 
+          ? applications.reduce((sum, app) => sum + Number(app.proposedRate), 0) / applications.length 
+          : 0,
+      };
+    } else if (companyProfile) {
+      // Get stats for company
+      const applications = await this.applicationRepository.findByCompanyId(companyProfile.id);
+      
+      return {
+        total: applications.length,
+        pending: applications.filter(app => app.status === 'PENDING').length,
+        accepted: applications.filter(app => app.status === 'ACCEPTED').length,
+        rejected: applications.filter(app => app.status === 'REJECTED').length,
+        withdrawn: applications.filter(app => app.status === 'WITHDRAWN').length,
+        averageRate: applications.length > 0 
+          ? applications.reduce((sum, app) => sum + Number(app.proposedRate), 0) / applications.length 
+          : 0,
+      };
+    } else {
+      return {
+        total: 0,
+        pending: 0,
+        accepted: 0,
+        rejected: 0,
+        withdrawn: 0,
+        averageRate: 0,
+      };
+    }
   }
 } 
