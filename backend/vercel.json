@@ -8,8 +8,24 @@
   ],
   "routes": [
     {
+      "src": "/api/(.*)",
+      "dest": "dist/server.js"
+    },
+    {
+      "src": "/health",
+      "dest": "dist/server.js"
+    },
+    {
+      "src": "/api-docs",
+      "dest": "dist/server.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "dist/server.js"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "CORS_ORIGIN": "https://pern-stack-test-lia-dtech-vg4f.vercel.app,http://localhost:3000"
+  }
 }

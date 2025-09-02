@@ -7,8 +7,8 @@ test
 *.log
 *.gz
 *.env
-.env.backup
-.docker-compose.yml
+*.env.backup
+*.docker-compose.yml
 *.test.ts
 jest.setup.js
 jest.config.js

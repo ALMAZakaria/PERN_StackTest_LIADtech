@@ -22,12 +22,16 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    // Proxy removed for production - API calls go directly to production backend
+    // Uncomment below for local development
+    /*
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
     },
+    */
   },
   build: {
     sourcemap: true,
