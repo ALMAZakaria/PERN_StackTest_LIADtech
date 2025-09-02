@@ -1,6 +1,6 @@
 import { createClient } from 'redis';
 import { config } from './server';
-import logger from '../../src/utils/logger';
+import logger from '../utils/logger';
 
 class RedisClient {
   private client;

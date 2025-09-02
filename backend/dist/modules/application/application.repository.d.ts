@@ -12,6 +12,35 @@ export interface UpdateApplicationData {
     proposedRate?: number;
     status?: 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN';
 }
+export interface ApplicationFilters {
+    missionId?: string;
+    freelancerId?: string;
+    companyId?: string;
+    status?: string;
+    minRate?: number;
+    maxRate?: number;
+    minDuration?: number;
+    maxDuration?: number;
+    dateFrom?: Date;
+    dateTo?: Date;
+}
+export interface PaginationOptions {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+}
+export interface PaginatedResult<T> {
+    data: T[];
+    meta: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+        hasNext: boolean;
+        hasPrev: boolean;
+    };
+}
 export declare class ApplicationRepository {
     create(data: CreateApplicationData): Promise<Application>;
     findById(id: string): Promise<Application | null>;
@@ -26,6 +55,7 @@ export declare class ApplicationRepository {
         companyId?: string;
         status?: string;
     }): Promise<Application[]>;
+    findManyWithPagination(filters?: ApplicationFilters, pagination?: PaginationOptions): Promise<PaginatedResult<Application>>;
     checkExistingApplication(missionId: string, freelancerId: string): Promise<Application | null>;
 }
 //# sourceMappingURL=application.repository.d.ts.map

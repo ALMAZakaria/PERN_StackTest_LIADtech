@@ -10,5 +10,9 @@ export declare class ApplicationController {
     getUserApplications: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;
     getMissionApplications: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;
     searchApplications: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    getUserApplicationsWithPagination: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;
+    getMissionApplicationsWithPagination: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;
+    searchApplicationsWithPagination: (req: Request, res: Response, next: NextFunction) => Promise<void>;
+    getApplicationStats: (req: AuthRequest, res: Response, next: NextFunction) => Promise<void>;
 }
 //# sourceMappingURL=application.controller.d.ts.map

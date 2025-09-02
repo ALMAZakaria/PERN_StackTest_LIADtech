@@ -81,10 +81,10 @@ export declare const userSearchFiltersSchema: z.ZodObject<{
     isActive?: boolean | undefined;
     page?: number | undefined;
     limit?: number | undefined;
-    createdAfter?: string | undefined;
-    createdBefore?: string | undefined;
     sortBy?: "firstName" | "lastName" | "email" | "createdAt" | "updatedAt" | undefined;
     sortOrder?: "asc" | "desc" | undefined;
+    createdAfter?: string | undefined;
+    createdBefore?: string | undefined;
 }>;
 export type UpdateProfileDto = z.infer<typeof updateProfileSchema>;
 export type CreateAdminUserDto = z.infer<typeof createAdminUserSchema>;

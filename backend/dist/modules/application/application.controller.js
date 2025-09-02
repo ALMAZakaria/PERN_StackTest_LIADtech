@@ -83,6 +83,134 @@ class ApplicationController {
                 next(error);
             }
         };
+        this.getUserApplicationsWithPagination = async (req, res, next) => {
+            try {
+                const userId = req.user.id;
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
+                const sortBy = req.query.sortBy;
+                const sortOrder = req.query.sortOrder;
+                const status = req.query.status;
+                const minRate = req.query.minRate ? parseFloat(req.query.minRate) : undefined;
+                const maxRate = req.query.maxRate ? parseFloat(req.query.maxRate) : undefined;
+                const minDuration = req.query.minDuration ? parseInt(req.query.minDuration) : undefined;
+                const maxDuration = req.query.maxDuration ? parseInt(req.query.maxDuration) : undefined;
+                const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom) : undefined;
+                const dateTo = req.query.dateTo ? new Date(req.query.dateTo) : undefined;
+                const filters = {
+                    status,
+                    minRate,
+                    maxRate,
+                    minDuration,
+                    maxDuration,
+                    dateFrom,
+                    dateTo,
+                };
+                const pagination = {
+                    page,
+                    limit,
+                    sortBy,
+                    sortOrder,
+                };
+                const result = await this.applicationService.getUserApplicationsWithPagination(userId, filters, pagination);
+                response_1.ResponseUtil.success(res, result, 'User applications retrieved successfully');
+            }
+            catch (error) {
+                next(error);
+            }
+        };
+        this.getMissionApplicationsWithPagination = async (req, res, next) => {
+            try {
+                const { missionId } = req.params;
+                const userId = req.user.id;
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
+                const sortBy = req.query.sortBy;
+                const sortOrder = req.query.sortOrder;
+                const status = req.query.status;
+                const minRate = req.query.minRate ? parseFloat(req.query.minRate) : undefined;
+                const maxRate = req.query.maxRate ? parseFloat(req.query.maxRate) : undefined;
+                const minDuration = req.query.minDuration ? parseInt(req.query.minDuration) : undefined;
+                const maxDuration = req.query.maxDuration ? parseInt(req.query.maxDuration) : undefined;
+                const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom) : undefined;
+                const dateTo = req.query.dateTo ? new Date(req.query.dateTo) : undefined;
+                const filters = {
+                    status,
+                    minRate,
+                    maxRate,
+                    minDuration,
+                    maxDuration,
+                    dateFrom,
+                    dateTo,
+                };
+                const pagination = {
+                    page,
+                    limit,
+                    sortBy,
+                    sortOrder,
+                };
+                const result = await this.applicationService.getMissionApplicationsWithPagination(missionId, userId, filters, pagination);
+                response_1.ResponseUtil.success(res, result, 'Mission applications retrieved successfully');
+            }
+            catch (error) {
+                next(error);
+            }
+        };
+        this.searchApplicationsWithPagination = async (req, res, next) => {
+            try {
+                const page = parseInt(req.query.page) || 1;
+                const limit = parseInt(req.query.limit) || 10;
+                const sortBy = req.query.sortBy;
+                const sortOrder = req.query.sortOrder;
+                const missionId = req.query.missionId;
+                const freelancerId = req.query.freelancerId;
+                const companyId = req.query.companyId;
+                const status = req.query.status;
+                const minRate = req.query.minRate ? parseFloat(req.query.minRate) : undefined;
+                const maxRate = req.query.maxRate ? parseFloat(req.query.maxRate) : undefined;
+                const minDuration = req.query.minDuration ? parseInt(req.query.minDuration) : undefined;
+                const maxDuration = req.query.maxDuration ? parseInt(req.query.maxDuration) : undefined;
+                const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom) : undefined;
+                const dateTo = req.query.dateTo ? new Date(req.query.dateTo) : undefined;
+                const filters = {
+                    missionId,
+                    freelancerId,
+                    companyId,
+                    status,
+                    minRate,
+                    maxRate,
+                    minDuration,
+                    maxDuration,
+                    dateFrom,
+                    dateTo,
+                };
+                const pagination = {
+                    page,
+                    limit,
+                    sortBy,
+                    sortOrder,
+                };
+                const result = await this.applicationService.searchApplicationsWithPagination(filters, pagination);
+                response_1.ResponseUtil.success(res, result, 'Applications retrieved successfully');
+            }
+            catch (error) {
+                next(error);
+            }
+        };
+        this.getApplicationStats = async (req, res, next) => {
+            try {
+                console.log('getApplicationStats called with user:', req.user);
+                const userId = req.user.id;
+                console.log('Getting stats for userId:', userId);
+                const stats = await this.applicationService.getApplicationStats(userId);
+                console.log('Stats retrieved successfully:', stats);
+                response_1.ResponseUtil.success(res, stats, 'Application statistics retrieved successfully');
+            }
+            catch (error) {
+                console.error('Error in getApplicationStats controller:', error);
+                next(error);
+            }
+        };
         this.applicationService = new application_service_1.ApplicationService();
     }
 }

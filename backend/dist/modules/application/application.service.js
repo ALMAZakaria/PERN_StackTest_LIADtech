@@ -150,6 +150,95 @@ class ApplicationService {
     async searchApplications(filters) {
         return this.applicationRepository.findMany(filters);
     }
+    async getUserApplicationsWithPagination(userId, filters, pagination) {
+        const { FreelanceRepository } = await Promise.resolve().then(() => __importStar(require('../freelance/repository/freelance.repository')));
+        const { CompanyRepository } = await Promise.resolve().then(() => __importStar(require('../company/repository/company.repository')));
+        const freelanceRepository = new FreelanceRepository();
+        const companyRepository = new CompanyRepository();
+        const freelanceProfile = await freelanceRepository.findByUserId(userId);
+        const companyProfile = await companyRepository.findByUserId(userId);
+        if (freelanceProfile) {
+            return this.applicationRepository.findManyWithPagination({ ...filters, freelancerId: freelanceProfile.id }, pagination);
+        }
+        else if (companyProfile) {
+            return this.applicationRepository.findManyWithPagination({ ...filters, companyId: companyProfile.id }, pagination);
+        }
+        else {
+            return {
+                data: [],
+                meta: {
+                    page: pagination?.page || 1,
+                    limit: pagination?.limit || 10,
+                    total: 0,
+                    totalPages: 0,
+                    hasNext: false,
+                    hasPrev: false,
+                },
+            };
+        }
+    }
+    async getMissionApplicationsWithPagination(missionId, userId, filters, pagination) {
+        const { MissionRepository } = await Promise.resolve().then(() => __importStar(require('../mission/repository/mission.repository')));
+        const missionRepository = new MissionRepository();
+        const mission = await missionRepository.findById(missionId);
+        if (!mission) {
+            throw new AppError_1.AppError('Mission not found', 404);
+        }
+        const { CompanyRepository } = await Promise.resolve().then(() => __importStar(require('../company/repository/company.repository')));
+        const companyRepository = new CompanyRepository();
+        const companyProfile = await companyRepository.findByUserId(userId);
+        if (!companyProfile || mission.companyId !== companyProfile.id) {
+            throw new AppError_1.AppError('Not authorized to view applications for this mission', 403);
+        }
+        return this.applicationRepository.findManyWithPagination({ ...filters, missionId }, pagination);
+    }
+    async searchApplicationsWithPagination(filters, pagination) {
+        return this.applicationRepository.findManyWithPagination(filters, pagination);
+    }
+    async getApplicationStats(userId) {
+        const { FreelanceRepository } = await Promise.resolve().then(() => __importStar(require('../freelance/repository/freelance.repository')));
+        const { CompanyRepository } = await Promise.resolve().then(() => __importStar(require('../company/repository/company.repository')));
+        const freelanceRepository = new FreelanceRepository();
+        const companyRepository = new CompanyRepository();
+        const freelanceProfile = await freelanceRepository.findByUserId(userId);
+        const companyProfile = await companyRepository.findByUserId(userId);
+        if (freelanceProfile) {
+            const applications = await this.applicationRepository.findByFreelancerId(freelanceProfile.id);
+            return {
+                total: applications.length,
+                pending: applications.filter(app => app.status === 'PENDING').length,
+                accepted: applications.filter(app => app.status === 'ACCEPTED').length,
+                rejected: applications.filter(app => app.status === 'REJECTED').length,
+                withdrawn: applications.filter(app => app.status === 'WITHDRAWN').length,
+                averageRate: applications.length > 0
+                    ? applications.reduce((sum, app) => sum + Number(app.proposedRate), 0) / applications.length
+                    : 0,
+            };
+        }
+        else if (companyProfile) {
+            const applications = await this.applicationRepository.findByCompanyId(companyProfile.id);
+            return {
+                total: applications.length,
+                pending: applications.filter(app => app.status === 'PENDING').length,
+                accepted: applications.filter(app => app.status === 'ACCEPTED').length,
+                rejected: applications.filter(app => app.status === 'REJECTED').length,
+                withdrawn: applications.filter(app => app.status === 'WITHDRAWN').length,
+                averageRate: applications.length > 0
+                    ? applications.reduce((sum, app) => sum + Number(app.proposedRate), 0) / applications.length
+                    : 0,
+            };
+        }
+        else {
+            return {
+                total: 0,
+                pending: 0,
+                accepted: 0,
+                rejected: 0,
+                withdrawn: 0,
+                averageRate: 0,
+            };
+        }
+    }
 }
 exports.ApplicationService = ApplicationService;
 //# sourceMappingURL=application.service.js.map

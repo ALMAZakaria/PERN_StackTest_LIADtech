@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const redis_1 = require("redis");
 const server_1 = require("./server");
-const logger_1 = __importDefault(require("../../src/utils/logger"));
+const logger_1 = __importDefault(require("../utils/logger"));
 class RedisClient {
     constructor() {
         this.isConnected = false;

@@ -1,4 +1,4 @@
-import { UpdateApplicationData } from './application.repository';
+import { UpdateApplicationData, ApplicationFilters, PaginationOptions, PaginatedResult } from './application.repository';
 interface CreateApplicationRequest {
     missionId: string;
     proposal: string;
@@ -20,6 +20,10 @@ export declare class ApplicationService {
         companyId?: string;
         status?: string;
     }): Promise<any[]>;
+    getUserApplicationsWithPagination(userId: string, filters?: ApplicationFilters, pagination?: PaginationOptions): Promise<PaginatedResult<any>>;
+    getMissionApplicationsWithPagination(missionId: string, userId: string, filters?: ApplicationFilters, pagination?: PaginationOptions): Promise<PaginatedResult<any>>;
+    searchApplicationsWithPagination(filters?: ApplicationFilters, pagination?: PaginationOptions): Promise<PaginatedResult<any>>;
+    getApplicationStats(userId: string): Promise<any>;
 }
 export {};
 //# sourceMappingURL=application.service.d.ts.map

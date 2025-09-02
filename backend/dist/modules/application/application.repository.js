@@ -151,6 +151,94 @@ class ApplicationRepository {
             orderBy: { createdAt: 'desc' },
         });
     }
+    async findManyWithPagination(filters, pagination) {
+        const page = pagination?.page || 1;
+        const limit = pagination?.limit || 10;
+        const skip = (page - 1) * limit;
+        const where = {};
+        if (filters?.missionId) {
+            where.missionId = filters.missionId;
+        }
+        if (filters?.freelancerId) {
+            where.freelancerId = filters.freelancerId;
+        }
+        if (filters?.companyId) {
+            where.companyId = filters.companyId;
+        }
+        if (filters?.status) {
+            where.status = filters.status;
+        }
+        if (filters?.minRate || filters?.maxRate) {
+            where.proposedRate = {};
+            if (filters.minRate) {
+                where.proposedRate.gte = new library_1.Decimal(filters.minRate);
+            }
+            if (filters.maxRate) {
+                where.proposedRate.lte = new library_1.Decimal(filters.maxRate);
+            }
+        }
+        if (filters?.minDuration || filters?.maxDuration) {
+            where.estimatedDuration = {};
+            if (filters.minDuration) {
+                where.estimatedDuration.gte = filters.minDuration;
+            }
+            if (filters.maxDuration) {
+                where.estimatedDuration.lte = filters.maxDuration;
+            }
+        }
+        if (filters?.dateFrom || filters?.dateTo) {
+            where.createdAt = {};
+            if (filters.dateFrom) {
+                where.createdAt.gte = filters.dateFrom;
+            }
+            if (filters.dateTo) {
+                where.createdAt.lte = filters.dateTo;
+            }
+        }
+        const orderBy = {};
+        if (pagination?.sortBy) {
+            orderBy[pagination.sortBy] =
+                pagination.sortOrder || 'desc';
+        }
+        else {
+            orderBy.createdAt = 'desc';
+        }
+        const [applications, total] = await Promise.all([
+            prisma.application.findMany({
+                where,
+                include: {
+                    mission: true,
+                    freelancer: {
+                        include: {
+                            user: true,
+                        },
+                    },
+                    company: {
+                        include: {
+                            user: true,
+                        },
+                    },
+                    ratings: true,
+                },
+                orderBy,
+                skip,
+                take: limit,
+            }),
+            prisma.application.count({ where }),
+        ]);
+        const totalPages = Math.ceil(total / limit);
+        return {
+            data: applications,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages,
+                hasNext: page < totalPages,
+                hasPrev: page > 1,
+            },
+        };
+    }
     async checkExistingApplication(missionId, freelancerId) {
         return prisma.application.findUnique({
             where: {
