@@ -27,10 +27,10 @@ const UsersPage: React.FC = () => {
     role: 'user' as 'user' | 'admin' | 'moderator'
   })
   
-  // Demo users data
+  // Demo users data with CUID-like IDs
   const [users, setUsers] = useState<DemoUser[]>([
     {
-      id: '1',
+      id: 'clh1234567890abcdef123456',
       name: 'Admin User',
       email: 'admin@demo.com',
       role: 'admin' as string,
@@ -40,7 +40,7 @@ const UsersPage: React.FC = () => {
       updatedAt: '2024-01-01'
     },
     {
-      id: '2',
+      id: 'clh2345678901bcdef1234567',
       name: 'John Doe',
       email: 'john@example.com',
       role: 'user' as string,
@@ -50,7 +50,7 @@ const UsersPage: React.FC = () => {
       updatedAt: '2024-01-15'
     },
     {
-      id: '3',
+      id: 'clh3456789012cdef12345678',
       name: 'Jane Smith',
       email: 'jane@example.com',
       role: 'user' as string,
@@ -60,7 +60,7 @@ const UsersPage: React.FC = () => {
       updatedAt: '2024-01-14'
     },
     {
-      id: '4',
+      id: 'clh4567890123def123456789',
       name: 'Mike Johnson',
       email: 'mike@example.com',
       role: 'user' as string,
@@ -143,6 +143,32 @@ const UsersPage: React.FC = () => {
       return
     }
     
+    // Client-side validation for create user
+    if (!formData.firstName.trim()) {
+      setError('First name is required')
+      return
+    }
+    if (!formData.lastName.trim()) {
+      setError('Last name is required')
+      return
+    }
+    if (!formData.email.trim()) {
+      setError('Email is required')
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError('Please enter a valid email address')
+      return
+    }
+    if (!formData.password.trim()) {
+      setError('Password is required')
+      return
+    }
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long')
+      return
+    }
+    
     try {
       if (isBackendConnected) {
         // Use real API
@@ -158,7 +184,7 @@ const UsersPage: React.FC = () => {
       } else {
         // Demo mode - create user locally
         const newUser: DemoUser = {
-          id: String(users.length + 1),
+          id: `clh${Date.now()}${Math.random().toString(36).substr(2, 9)}`,
           name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
           role: formData.role as string,
@@ -178,7 +204,15 @@ const UsersPage: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Create user error:', error)
-      setError(error.message || 'Failed to create user')
+      
+      // Handle detailed validation errors from backend
+      if (error.response?.data?.message === 'Validation failed' && error.response?.data?.data) {
+        const validationErrors = error.response.data.data
+        const errorMessages = validationErrors.map((err: any) => `${err.field}: ${err.message}`).join(', ')
+        setError(`Validation failed: ${errorMessages}`)
+      } else {
+        setError(error.message || 'Failed to create user')
+      }
     }
   }
 
@@ -199,17 +233,56 @@ const UsersPage: React.FC = () => {
     
     if (!editingUser) return
 
+    // Client-side validation
+    const trimmedFirstName = formData.firstName.trim()
+    const trimmedLastName = formData.lastName.trim()
+    const trimmedEmail = formData.email.trim()
+    
+    if (!trimmedFirstName) {
+      setError('First name is required')
+      return
+    }
+    if (!trimmedLastName) {
+      setError('Last name is required')
+      return
+    }
+    if (!trimmedEmail) {
+      setError('Email is required')
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setError('Please enter a valid email address')
+      return
+    }
+    
+    // Validate role
+    const validRoles = ['user', 'admin', 'moderator']
+    if (!validRoles.includes(formData.role)) {
+      setError('Please select a valid role')
+      return
+    }
+
     try {
       const updateData: any = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
+        firstName: trimmedFirstName,
+        lastName: trimmedLastName,
+        email: trimmedEmail,
         role: formData.role.toUpperCase() as 'USER' | 'ADMIN' | 'MODERATOR',
-        isActive: editingUser.isActive
+        isActive: Boolean(editingUser.isActive)
+      }
+      
+      // Validate user ID format (should be CUID)
+      if (!editingUser.id || typeof editingUser.id !== 'string') {
+        setError('Invalid user ID')
+        return
       }
 
-      // Only include password if it's provided
+      // Only include password if it's provided and meets minimum length
       if (formData.password.trim()) {
+        if (formData.password.length < 8) {
+          setError('Password must be at least 8 characters long')
+          return
+        }
         updateData.password = formData.password
       }
 
@@ -245,7 +318,15 @@ const UsersPage: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Update user error:', error)
-      setError(error.message || 'Failed to update user')
+      
+      // Handle detailed validation errors from backend
+      if (error.response?.data?.message === 'Validation failed' && error.response?.data?.data) {
+        const validationErrors = error.response.data.data
+        const errorMessages = validationErrors.map((err: any) => `${err.field}: ${err.message}`).join(', ')
+        setError(`Validation failed: ${errorMessages}`)
+      } else {
+        setError(error.message || 'Failed to update user')
+      }
     }
   }
 

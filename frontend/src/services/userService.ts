@@ -77,6 +77,13 @@ class UserService {
         throw new Error(response.data.message || 'Failed to create user');
       }
     } catch (error: any) {
+      // Handle validation errors with detailed messages
+      if (error.response?.data?.message === 'Validation failed' && error.response?.data?.data) {
+        const validationErrors = error.response.data.data;
+        const errorMessages = validationErrors.map((err: any) => `${err.field}: ${err.message}`).join(', ');
+        throw new Error(`Validation failed: ${errorMessages}`);
+      }
+      
       const message = error.response?.data?.message || error.message || 'Failed to create user';
       throw new Error(message);
     }
@@ -109,6 +116,13 @@ class UserService {
         throw new Error(response.data.message || 'Failed to update user');
       }
     } catch (error: any) {
+      // Handle validation errors with detailed messages
+      if (error.response?.data?.message === 'Validation failed' && error.response?.data?.data) {
+        const validationErrors = error.response.data.data;
+        const errorMessages = validationErrors.map((err: any) => `${err.field}: ${err.message}`).join(', ');
+        throw new Error(`Validation failed: ${errorMessages}`);
+      }
+      
       const message = error.response?.data?.message || error.message || 'Failed to update user';
       throw new Error(message);
     }
