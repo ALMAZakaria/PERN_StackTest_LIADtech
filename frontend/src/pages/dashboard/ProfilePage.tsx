@@ -20,7 +20,7 @@ const ProfilePage: React.FC = () => {
     skills: [] as string[],
     experience: 0,
     dailyRate: 0,
-    availability: '',
+    availability: 0, // Changed from string to number
     companyName: '',
     industry: '',
     companySize: '',
@@ -57,7 +57,7 @@ const ProfilePage: React.FC = () => {
               skills: freelanceProfile.skills || [],
               experience: freelanceProfile.experience || 0,
               dailyRate: freelanceProfile.dailyRate || 0,
-              availability: freelanceProfile.availability || ''
+              availability: freelanceProfile.availability || 0 // Ensure it's a number
             }))
           } catch (err: any) {
             if (err.response?.status !== 404) {
@@ -477,6 +477,7 @@ const ProfilePage: React.FC = () => {
                       <option value="SMALL">Small (11-50)</option>
                       <option value="MEDIUM">Medium (51-200)</option>
                       <option value="LARGE">Large (200+)</option>
+                      <option value="ENTERPRISE">Enterprise (1000+)</option>
                     </select>
                   </div>
 
