@@ -30,13 +30,6 @@ export interface RegisterData {
 }
 
 class AuthService {
-  // Helper function to safely parse dates
-  private parseDate(dateString: string | null | undefined): Date {
-    if (!dateString) return new Date();
-    
-    const parsed = new Date(dateString);
-    return isNaN(parsed.getTime()) ? new Date() : parsed;
-  }
 
   // Login user
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
@@ -52,12 +45,10 @@ class AuthService {
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('isAuthenticated', 'true');
         
-        // Convert string dates to Date objects for Redux and normalize role
+        // Normalize role for Redux (keep dates as strings)
         const userForRedux = {
           ...user,
-          role: user.role.toLowerCase() as 'user' | 'admin' | 'moderator',
-          createdAt: this.parseDate(user.createdAt),
-          updatedAt: this.parseDate(user.updatedAt)
+          role: user.role.toLowerCase() as 'user' | 'admin' | 'moderator'
         };
         
         // Update Redux state
@@ -110,12 +101,10 @@ class AuthService {
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('isAuthenticated', 'true');
         
-        // Convert string dates to Date objects for Redux and normalize role
+        // Normalize role for Redux (keep dates as strings)
         const userForRedux = {
           ...user,
-          role: user.role.toLowerCase() as 'user' | 'admin' | 'moderator',
-          createdAt: this.parseDate(user.createdAt),
-          updatedAt: this.parseDate(user.updatedAt)
+          role: user.role.toLowerCase() as 'user' | 'admin' | 'moderator'
         };
         
         // Update Redux state

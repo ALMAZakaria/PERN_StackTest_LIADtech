@@ -48,7 +48,7 @@ services:
       JWT_REFRESH_SECRET: dev-refresh-secret-key-change-in-production
       CORS_ORIGIN: http://localhost:3000
       SWAGGER_ENABLED: "true"
-      DATABASE_URL: postgres://e48dee9ced96491ba00deb235b058b83c76360a5f57db8be08b4e874f13eee4b:sk_EWjlERBjwuYoZKA9pQlOp@db.prisma.io:5432/postgres?sslmode=require
+      DATABASE_URL: prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza19CUVYzLTJRTWRBNkwzVDU1dkpxOVciLCJhcGlfa2V5IjoiMDFLNDVNUkdOWDdGMUswUVQ2UzQ2MFNTNDciLCJ0ZW5hbnRfaWQiOiJlYzM4ZTFjNmI4YzVlZmVjNTZmZmMzZjIyZjI3MDJhMDlmZjQyZDJkMGY1OTFjZjY4NDc0NGE5Yjk5MTM2OWI3IiwiaW50ZXJuYWxfc2VjcmV0IjoiYmIwYWQ3ZDYtMmQ2MS00ZGM5LWE3MWEtNWZhMjliYmZjODU0In0.ThWpuQwbrc3nNWWMnW4i_LUGkrBI2c2iTIaNp3UE4Uo
     ports:
       - "5000:5000"
     volumes:
