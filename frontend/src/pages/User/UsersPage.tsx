@@ -5,8 +5,7 @@ import { useAppSelector } from '../../hooks/hooks'
 import { 
   getRolePermissions, 
   getAvailableRolesForUser, 
-  canDeleteUser,
-  canManageRole 
+  canDeleteUser
 } from '../../utils/roleUtils'
 import Header from '../../components/ui/Header'
 
@@ -291,19 +290,7 @@ const UsersPage: React.FC = () => {
     )
   }
 
-  const handleLogout = async () => {
-    try {
-      const { authService } = await import('../../services/authService')
-      await authService.logout()
-    } catch (error) {
-      console.warn('Auth service not available, doing local logout')
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      localStorage.removeItem('isAuthenticated')
-    } finally {
-      window.location.href = '/login'
-    }
-  }
+
 
   const getStatusBadge = (status: boolean) => {
     const baseClasses = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"

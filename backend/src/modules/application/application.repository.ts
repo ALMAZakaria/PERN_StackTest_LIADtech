@@ -1,4 +1,5 @@
 import { PrismaClient, Application, Prisma } from '@prisma/client';
+import { Decimal } from '@prisma/client/runtime/library';
 
 const prisma = new PrismaClient();
 
@@ -23,7 +24,7 @@ export class ApplicationRepository {
       data: {
         ...data,
         estimatedDuration: data.estimatedDuration || 0,
-        proposedRate: new (prisma as any).Prisma.Decimal(data.proposedRate),
+        proposedRate: new Decimal(data.proposedRate),
       },
       include: {
         mission: true,
@@ -111,7 +112,7 @@ export class ApplicationRepository {
   async update(id: string, data: UpdateApplicationData): Promise<Application> {
     const updateData: any = { ...data };
     if (data.proposedRate !== undefined) {
-      updateData.proposedRate = new (prisma as any).Prisma.Decimal(data.proposedRate);
+      updateData.proposedRate = new Decimal(data.proposedRate);
     }
 
     return prisma.application.update({

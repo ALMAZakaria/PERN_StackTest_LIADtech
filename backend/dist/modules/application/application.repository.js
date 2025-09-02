@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ApplicationRepository = void 0;
 const client_1 = require("@prisma/client");
+const library_1 = require("@prisma/client/runtime/library");
 const prisma = new client_1.PrismaClient();
 class ApplicationRepository {
     async create(data) {
@@ -9,7 +10,7 @@ class ApplicationRepository {
             data: {
                 ...data,
                 estimatedDuration: data.estimatedDuration || 0,
-                proposedRate: new prisma.Prisma.Decimal(data.proposedRate),
+                proposedRate: new library_1.Decimal(data.proposedRate),
             },
             include: {
                 mission: true,
@@ -92,7 +93,7 @@ class ApplicationRepository {
     async update(id, data) {
         const updateData = { ...data };
         if (data.proposedRate !== undefined) {
-            updateData.proposedRate = new prisma.Prisma.Decimal(data.proposedRate);
+            updateData.proposedRate = new library_1.Decimal(data.proposedRate);
         }
         return prisma.application.update({
             where: { id },

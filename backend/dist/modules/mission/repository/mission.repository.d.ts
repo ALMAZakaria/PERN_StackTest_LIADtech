@@ -7,6 +7,7 @@ export interface CreateMissionData {
     duration: number;
     location?: string;
     isRemote: boolean;
+    urgency?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
     companyId: string;
 }
 export interface UpdateMissionData {
@@ -17,6 +18,7 @@ export interface UpdateMissionData {
     duration?: number;
     location?: string;
     isRemote?: boolean;
+    urgency?: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
     status?: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 }
 export declare class MissionRepository {

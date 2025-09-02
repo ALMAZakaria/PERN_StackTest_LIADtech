@@ -6,6 +6,7 @@ export interface User {
   firstName: string
   lastName: string
   role: string
+  userType: string
   isActive: boolean
   createdAt: Date
   updatedAt: Date

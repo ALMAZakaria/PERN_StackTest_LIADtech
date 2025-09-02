@@ -21,17 +21,16 @@ const applicationController = new ApplicationController();
  *             type: object
  *             required:
  *               - missionId
- *               - companyId
  *               - proposal
  *               - proposedRate
  *             properties:
  *               missionId:
  *                 type: string
- *               companyId:
- *                 type: string
  *               proposal:
  *                 type: string
  *               proposedRate:
+ *                 type: number
+ *               estimatedDuration:
  *                 type: number
  *     responses:
  *       201:

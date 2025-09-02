@@ -167,8 +167,32 @@ export interface Application {
   createdAt: string;
   updatedAt: string;
   mission?: Mission;
-  freelancer?: User;
-  company?: User;
+  freelancer?: {
+    id: string;
+    userId: string;
+    skills: string[];
+    experience: number;
+    dailyRate: number;
+    availability: number;
+    location: string;
+    bio: string;
+    createdAt: string;
+    updatedAt: string;
+    user: User;
+  };
+  company?: {
+    id: string;
+    userId: string;
+    companyName: string;
+    industry: string;
+    size: string;
+    location: string;
+    description: string;
+    website?: string;
+    createdAt: string;
+    updatedAt: string;
+    user: User;
+  };
 }
 
 // Rating

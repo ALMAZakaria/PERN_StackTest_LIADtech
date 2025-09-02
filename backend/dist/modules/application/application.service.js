@@ -47,15 +47,15 @@ class ApplicationService {
         if (data.proposedRate <= 0) {
             throw new AppError_1.AppError('Proposed rate must be positive', 400);
         }
-        const existingApplication = await this.applicationRepository.checkExistingApplication(data.missionId, data.freelancerId);
-        if (existingApplication) {
-            throw new AppError_1.AppError('You have already applied to this mission', 400);
-        }
         const { FreelanceRepository } = await Promise.resolve().then(() => __importStar(require('../freelance/repository/freelance.repository')));
         const freelanceRepository = new FreelanceRepository();
         const freelanceProfile = await freelanceRepository.findByUserId(userId);
         if (!freelanceProfile) {
             throw new AppError_1.AppError('Freelance profile required to apply to missions', 400);
+        }
+        const existingApplication = await this.applicationRepository.checkExistingApplication(data.missionId, freelanceProfile.id);
+        if (existingApplication) {
+            throw new AppError_1.AppError('You have already applied to this mission', 400);
         }
         const { MissionRepository } = await Promise.resolve().then(() => __importStar(require('../mission/repository/mission.repository')));
         const missionRepository = new MissionRepository();
@@ -68,7 +68,8 @@ class ApplicationService {
         }
         return this.applicationRepository.create({
             ...data,
-            freelancerId: userId,
+            freelancerId: freelanceProfile.id,
+            companyId: mission.companyId,
         });
     }
     async getApplication(id) {
@@ -83,13 +84,17 @@ class ApplicationService {
         if (!application) {
             throw new AppError_1.AppError('Application not found', 404);
         }
-        if (application.freelancerId !== userId && application.companyId !== userId) {
+        const { CompanyRepository } = await Promise.resolve().then(() => __importStar(require('../company/repository/company.repository')));
+        const companyRepository = new CompanyRepository();
+        const companyProfile = await companyRepository.findByUserId(userId);
+        const isCompanyOwner = companyProfile && application.companyId === companyProfile.id;
+        if (application.freelancerId !== userId && !isCompanyOwner) {
             throw new AppError_1.AppError('Not authorized to update this application', 403);
         }
         if (application.freelancerId !== userId && (data.proposal || data.proposedRate)) {
             throw new AppError_1.AppError('Only freelancer can update proposal and rate', 403);
         }
-        if (application.companyId !== userId && data.status) {
+        if (!isCompanyOwner && data.status) {
             throw new AppError_1.AppError('Only company can update application status', 403);
         }
         if (data.proposal !== undefined && !data.proposal.trim()) {
@@ -118,10 +123,10 @@ class ApplicationService {
         const freelanceProfile = await freelanceRepository.findByUserId(userId);
         const companyProfile = await companyRepository.findByUserId(userId);
         if (freelanceProfile) {
-            return this.applicationRepository.findByFreelancerId(userId);
+            return this.applicationRepository.findByFreelancerId(freelanceProfile.id);
         }
         else if (companyProfile) {
-            return this.applicationRepository.findByCompanyId(userId);
+            return this.applicationRepository.findByCompanyId(companyProfile.id);
         }
         else {
             return [];

@@ -1,7 +1,7 @@
 import React from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAppSelector } from '../hooks/hooks'
-import { canAccessUsersManagement, getRedirectPathByRole } from '../utils/roleUtils'
+import { getRedirectPathByRole } from '../utils/roleUtils'
 
 interface ProtectedRouteProps {
   children: React.ReactNode

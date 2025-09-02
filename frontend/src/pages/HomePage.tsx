@@ -6,10 +6,7 @@ import {
   BriefcaseIcon, 
   StarIcon, 
   ChartBarIcon,
-  CheckCircleIcon,
-  ArrowRightIcon,
-  ShieldCheckIcon,
-  CurrencyDollarIcon
+  ArrowRightIcon
 } from '@heroicons/react/24/outline'
 
 const HomePage: React.FC = () => {

@@ -98,7 +98,8 @@ describe('SkillBridge Pro Frontend Tests', () => {
     it('submits registration with correct data', async () => {
       vi.mocked(authService.register).mockResolvedValue({
         user: { id: '1', firstName: 'John', lastName: 'Doe', email: 'john@example.com', userType: UserType.FREELANCER } as any,
-        token: 'mock-token'
+        token: 'mock-token',
+        refreshToken: 'mock-refresh-token'
       })
       
       render(

@@ -1,6 +1,14 @@
 import { ApplicationRepository, CreateApplicationData, UpdateApplicationData } from './application.repository';
 import { AppError } from '../../utils/AppError';
 
+// Interface for creating application from frontend
+interface CreateApplicationRequest {
+  missionId: string;
+  proposal: string;
+  proposedRate: number;
+  estimatedDuration?: number;
+}
+
 export class ApplicationService {
   private applicationRepository: ApplicationRepository;
 
@@ -8,7 +16,7 @@ export class ApplicationService {
     this.applicationRepository = new ApplicationRepository();
   }
 
-  async createApplication(userId: string, data: CreateApplicationData): Promise<any> {
+  async createApplication(userId: string, data: CreateApplicationRequest): Promise<any> {
     // Validate data
     if (!data.proposal.trim()) {
       throw new AppError('Proposal is required', 400);
@@ -18,16 +26,6 @@ export class ApplicationService {
       throw new AppError('Proposed rate must be positive', 400);
     }
 
-    // Check if freelancer already applied to this mission
-    const existingApplication = await this.applicationRepository.checkExistingApplication(
-      data.missionId,
-      data.freelancerId
-    );
-
-    if (existingApplication) {
-      throw new AppError('You have already applied to this mission', 400);
-    }
-
     // Verify the user is a freelancer
     const { FreelanceRepository } = await import('../freelance/repository/freelance.repository');
     const freelanceRepository = new FreelanceRepository();
@@ -35,6 +33,16 @@ export class ApplicationService {
     
     if (!freelanceProfile) {
       throw new AppError('Freelance profile required to apply to missions', 400);
+    }
+
+    // Check if freelancer already applied to this mission
+    const existingApplication = await this.applicationRepository.checkExistingApplication(
+      data.missionId,
+      freelanceProfile.id
+    );
+
+    if (existingApplication) {
+      throw new AppError('You have already applied to this mission', 400);
     }
 
     // Verify the mission exists and is open
@@ -52,7 +60,8 @@ export class ApplicationService {
 
     return this.applicationRepository.create({
       ...data,
-      freelancerId: userId,
+      freelancerId: freelanceProfile.id,
+      companyId: mission.companyId,
     });
   }
 
@@ -71,8 +80,14 @@ export class ApplicationService {
       throw new AppError('Application not found', 404);
     }
 
+    // Get company profile to check if user is the company owner
+    const { CompanyRepository } = await import('../company/repository/company.repository');
+    const companyRepository = new CompanyRepository();
+    const companyProfile = await companyRepository.findByUserId(userId);
+    const isCompanyOwner = companyProfile && application.companyId === companyProfile.id;
+
     // Check if user owns this application or is the company
-    if (application.freelancerId !== userId && application.companyId !== userId) {
+    if (application.freelancerId !== userId && !isCompanyOwner) {
       throw new AppError('Not authorized to update this application', 403);
     }
 
@@ -82,7 +97,7 @@ export class ApplicationService {
     }
 
     // Only company can update status
-    if (application.companyId !== userId && data.status) {
+    if (!isCompanyOwner && data.status) {
       throw new AppError('Only company can update application status', 403);
     }
 
@@ -124,9 +139,9 @@ export class ApplicationService {
     const companyProfile = await companyRepository.findByUserId(userId);
 
     if (freelanceProfile) {
-      return this.applicationRepository.findByFreelancerId(userId);
+      return this.applicationRepository.findByFreelancerId(freelanceProfile.id);
     } else if (companyProfile) {
-      return this.applicationRepository.findByCompanyId(userId);
+      return this.applicationRepository.findByCompanyId(companyProfile.id);
     } else {
       // Return empty array if no profile exists
       return [];

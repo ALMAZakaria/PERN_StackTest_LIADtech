@@ -56,6 +56,9 @@ class MissionService {
         if (data.duration <= 0) {
             throw new AppError_1.AppError('Duration must be greater than 0', 400);
         }
+        if (!data.urgency) {
+            data.urgency = 'NORMAL';
+        }
         const { CompanyRepository } = await Promise.resolve().then(() => __importStar(require('../../company/repository/company.repository')));
         const companyRepository = new CompanyRepository();
         const companyProfile = await companyRepository.findByUserId(userId);

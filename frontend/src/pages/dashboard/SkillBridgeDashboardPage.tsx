@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { skillbridgeService } from '../../services/skillbridgeService'
 import { authService } from '../../services/authService'
 import { User, UserType } from '../../services/api'
@@ -13,7 +13,6 @@ const SkillBridgeDashboardPage: React.FC = () => {
   const [notifications, setNotifications] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const navigate = useNavigate()
 
   useEffect(() => {
     loadDashboardData()

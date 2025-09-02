@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { skillbridgeService } from '../../services/skillbridgeService'
 import { Mission, MissionStatus, UrgencyLevel, Application, ApplicationStatus } from '../../services/api'
 import { useAppSelector } from '../../hooks/hooks'
@@ -7,7 +7,6 @@ import Header from '../../components/ui/Header'
 
 const MissionDetailsPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const { user } = useAppSelector(state => state.auth)
   
   const [mission, setMission] = useState<Mission | null>(null)
@@ -38,9 +37,14 @@ const MissionDetailsPage: React.FC = () => {
       setMission(missionData)
       
       // Load applications if user is the company owner
-      if (user?.userType === 'COMPANY' && missionData.companyId === user.id) {
-        const applicationsData = await skillbridgeService.getMissionApplications(id!)
-        setApplications(applicationsData)
+      if (user?.userType === 'COMPANY') {
+        try {
+          const applicationsData = await skillbridgeService.getMissionApplications(id!)
+          setApplications(applicationsData)
+        } catch (err) {
+          // If user is not the owner, this will fail with 403, which is expected
+          console.log('User is not the mission owner')
+        }
       }
       
       // Check if user has already applied
@@ -78,6 +82,59 @@ const MissionDetailsPage: React.FC = () => {
       setError(err.message || 'Failed to submit application')
     } finally {
       setApplying(false)
+    }
+  }
+
+  const handleWithdrawApplication = async () => {
+    if (!userApplication) return
+    
+    try {
+      await skillbridgeService.updateApplication(userApplication.id, {
+        status: ApplicationStatus.WITHDRAWN
+      })
+      
+      setUserApplication({ ...userApplication, status: ApplicationStatus.WITHDRAWN })
+      alert('Application withdrawn successfully!')
+    } catch (err: any) {
+      setError(err.message || 'Failed to withdraw application')
+    }
+  }
+
+  const handleAcceptApplication = async (applicationId: string) => {
+    try {
+      await skillbridgeService.updateApplication(applicationId, {
+        status: ApplicationStatus.ACCEPTED
+      })
+      
+      // Update the application in the list
+      setApplications(prev => prev.map(app => 
+        app.id === applicationId 
+          ? { ...app, status: ApplicationStatus.ACCEPTED }
+          : app
+      ))
+      
+      alert('Application accepted successfully!')
+    } catch (err: any) {
+      setError(err.message || 'Failed to accept application')
+    }
+  }
+
+  const handleRejectApplication = async (applicationId: string) => {
+    try {
+      await skillbridgeService.updateApplication(applicationId, {
+        status: ApplicationStatus.REJECTED
+      })
+      
+      // Update the application in the list
+      setApplications(prev => prev.map(app => 
+        app.id === applicationId 
+          ? { ...app, status: ApplicationStatus.REJECTED }
+          : app
+      ))
+      
+      alert('Application rejected successfully!')
+    } catch (err: any) {
+      setError(err.message || 'Failed to reject application')
     }
   }
 
@@ -266,9 +323,8 @@ const MissionDetailsPage: React.FC = () => {
                       {userApplication.status === ApplicationStatus.PENDING && (
                         <button
                           onClick={() => {
-                            // Handle withdraw application
                             if (confirm('Are you sure you want to withdraw your application?')) {
-                              // Implement withdraw logic
+                              handleWithdrawApplication()
                             }
                           }}
                           className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
@@ -288,7 +344,7 @@ const MissionDetailsPage: React.FC = () => {
                 </>
               )}
               
-              {user?.userType === 'COMPANY' && mission.companyId === user.id && (
+              {user?.userType === 'COMPANY' && applications.length > 0 && (
                 <div className="flex items-center space-x-4">
                   <Link
                     to={`/missions/${mission.id}/edit`}
@@ -338,7 +394,7 @@ const MissionDetailsPage: React.FC = () => {
               </div>
 
               {/* Applications (for company owners) */}
-              {user?.userType === 'COMPANY' && mission.companyId === user.id && applications.length > 0 && (
+              {user?.userType === 'COMPANY' && applications.length > 0 && (
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                   <h2 className="text-xl font-semibold text-gray-900 mb-4">Applications ({applications.length})</h2>
                   <div className="space-y-4">
@@ -347,9 +403,9 @@ const MissionDetailsPage: React.FC = () => {
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <p className="font-medium text-gray-900">
-                              {application.freelancer?.firstName} {application.freelancer?.lastName}
+                              {application.freelancer?.user?.firstName} {application.freelancer?.user?.lastName}
                             </p>
-                            <p className="text-sm text-gray-500">{application.freelancer?.email}</p>
+                            <p className="text-sm text-gray-500">{application.freelancer?.user?.email}</p>
                           </div>
                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getApplicationStatusColor(application.status)}`}>
                             {application.status}
@@ -363,17 +419,13 @@ const MissionDetailsPage: React.FC = () => {
                         {application.status === ApplicationStatus.PENDING && (
                           <div className="flex items-center space-x-2 mt-3">
                             <button
-                              onClick={() => {
-                                // Implement accept application
-                              }}
+                              onClick={() => handleAcceptApplication(application.id)}
                               className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700"
                             >
                               Accept
                             </button>
                             <button
-                              onClick={() => {
-                                // Implement reject application
-                              }}
+                              onClick={() => handleRejectApplication(application.id)}
                               className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700"
                             >
                               Reject

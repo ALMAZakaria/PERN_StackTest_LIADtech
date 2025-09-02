@@ -19,7 +19,6 @@ const CreateMissionPage: React.FC = () => {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [availableSkills] = useState<string[]>([])
   const [skillInput, setSkillInput] = useState('')
   const [suggestedSkills, setSuggestedSkills] = useState<string[]>([])
   const [hasCompanyProfile, setHasCompanyProfile] = useState<boolean | null>(null)
@@ -52,7 +51,8 @@ const CreateMissionPage: React.FC = () => {
   const loadAvailableSkills = async () => {
     try {
       const skills = await skillbridgeService.getSkills()
-      setAvailableSkills(skills)
+      // Note: availableSkills is not used in the current implementation
+      console.log('Available skills loaded:', skills)
     } catch (err: any) {
       console.error('Failed to load skills:', err)
     }
