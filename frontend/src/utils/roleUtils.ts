@@ -47,7 +47,9 @@ export const getRolePermissions = (userRole: string): RolePermissions => {
 }
 
 export const canAccessUsersManagement = (userRole: string): boolean => {
-  const permissions = getRolePermissions(userRole)
+  // Ensure case-insensitive comparison
+  const normalizedRole = userRole?.toUpperCase()
+  const permissions = getRolePermissions(normalizedRole)
   return permissions.canManageUsers
 }
 

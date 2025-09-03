@@ -11,6 +11,8 @@ const Header: React.FC = () => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
 
+
+
   const handleLogout = () => {
     authService.clearAuthData()
     dispatch(clearAuth())
@@ -105,7 +107,9 @@ const Header: React.FC = () => {
                         Applications
                       </Link>
                     )}
-                    {(user?.role === 'ADMIN' || user?.role === 'MODERATOR') && (
+
+                    {/* More robust role checking */}
+                    {user?.role && (user.role.toUpperCase() === 'ADMIN' || user.role.toUpperCase() === 'MODERATOR') && (
                       <Link
                         to="/ManagerDashboard"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

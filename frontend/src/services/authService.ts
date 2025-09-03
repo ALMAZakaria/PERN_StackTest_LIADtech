@@ -45,10 +45,10 @@ class AuthService {
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('isAuthenticated', 'true');
         
-        // Normalize role for Redux (keep dates as strings)
+        // Normalize role to uppercase for consistency
         const userForRedux = {
           ...user,
-          role: user.role.toLowerCase() as 'user' | 'admin' | 'moderator'
+          role: user.role.toUpperCase() // Normalize to 'ADMIN', 'MODERATOR', 'USER'
         };
         
         // Update Redux state
@@ -101,10 +101,10 @@ class AuthService {
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('isAuthenticated', 'true');
         
-        // Normalize role for Redux (keep dates as strings)
+        // Normalize role to uppercase for consistency
         const userForRedux = {
           ...user,
-          role: user.role.toLowerCase() as 'user' | 'admin' | 'moderator'
+          role: user.role.toUpperCase() // Normalize to 'ADMIN', 'MODERATOR', 'USER'
         };
         
         // Update Redux state

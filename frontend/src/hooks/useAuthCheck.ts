@@ -19,8 +19,12 @@ export const useAuthCheck = () => {
           const token = authService.getToken()
           
           if (user && token) {
-            // Keep dates as strings for Redux serialization
-            dispatch(setUser({ user, token }))
+            // Ensure role is in correct case format
+            const normalizedUser = {
+              ...user,
+              role: user.role.toUpperCase() // Normalize to uppercase for consistency
+            }
+            dispatch(setUser({ user: normalizedUser, token }))
           } else {
             // Clear invalid auth data
             authService.clearAuthData()
