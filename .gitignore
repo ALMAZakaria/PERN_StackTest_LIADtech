@@ -7,8 +7,9 @@ test
 *.log
 *.gz
 *.env
+.env.backup
+.docker-compose.ymldocker-compose.yml
 *.env.backup
-
 # Docker
 docker-compose.yml
 *.docker-compose.yml
