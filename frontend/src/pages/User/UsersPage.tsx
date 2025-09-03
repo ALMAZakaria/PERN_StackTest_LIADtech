@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { User } from '../../services/api'
 import { useAppSelector } from '../../hooks/hooks'
@@ -16,7 +16,7 @@ interface DemoUser extends Omit<User, 'firstName' | 'lastName' | 'role'> {
 }
 
 const UsersPage: React.FC = () => {
-  const currentUser = useAppSelector(state => state.auth.user)
+  const currentUser = useAppSelector((state: any) => state.auth.user)
   const [showCreateForm, setShowCreateForm] = useState(false)
   const [editingUser, setEditingUser] = useState<DemoUser | null>(null)
   const [formData, setFormData] = useState({
