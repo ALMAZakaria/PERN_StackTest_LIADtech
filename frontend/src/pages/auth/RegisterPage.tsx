@@ -1,31 +1,61 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { authService } from '../../services/authService'
+import { UserType } from '../../services/api'
+import { getRedirectPathByRole } from '../../utils/roleUtils'
+import Header from '../../components/ui/Header'
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    userType: UserType.FREELANCER as UserType,
+    // Freelancer specific fields
+    skills: [] as string[],
+    experience: 0,
+    dailyRate: 0,
+    availability: '',
+    location: '',
+    bio: '',
+    // Company specific fields
+    companyName: '',
+    industry: '',
+    size: '',
+    description: '',
+    website: ''
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     })
-    // Clear error when user starts typing
     if (error) setError('')
   }
 
+  const handleSkillsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const skills = e.target.value.split(',').map(skill => skill.trim()).filter(skill => skill)
+    setFormData({
+      ...formData,
+      skills
+    })
+  }
+
   const validateForm = () => {
-    if (!formData.name.trim()) {
-      setError('Please enter your full name')
+    if (!formData.firstName.trim()) {
+      setError('Please enter your first name')
+      return false
+    }
+    if (!formData.lastName.trim()) {
+      setError('Please enter your last name')
       return false
     }
     if (!formData.email.trim()) {
@@ -40,30 +70,73 @@ const RegisterPage: React.FC = () => {
       setError('Passwords do not match')
       return false
     }
+
+    // Validate user type specific fields
+    if (formData.userType === UserType.FREELANCER) {
+      if (!formData.skills.length) {
+        setError('Please enter at least one skill')
+        return false
+      }
+      if (formData.dailyRate <= 0) {
+        setError('Please enter a valid daily rate')
+        return false
+      }
+    } else if (formData.userType === UserType.COMPANY) {
+      if (!formData.companyName.trim()) {
+        setError('Please enter your company name')
+        return false
+      }
+      if (!formData.industry.trim()) {
+        setError('Please enter your industry')
+        return false
+      }
+    }
+
     return true
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!validateForm()) return
-    
+    if (!validateForm()) {
+      return
+    }
+
     setIsLoading(true)
     setError('')
 
     try {
-      // Use real authentication service
-      await authService.register({
-        name: formData.name,
+      const registerData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         email: formData.email,
-        password: formData.password
-      })
+        password: formData.password,
+        userType: formData.userType,
+        ...(formData.userType === UserType.FREELANCER && {
+          skills: formData.skills,
+          experience: Number(formData.experience),
+          dailyRate: Number(formData.dailyRate),
+          availability: formData.availability,
+          location: formData.location,
+          bio: formData.bio
+        }),
+        ...(formData.userType === UserType.COMPANY && {
+          companyName: formData.companyName,
+          industry: formData.industry,
+          size: formData.size,
+          description: formData.description,
+          website: formData.website
+        })
+      }
+
+      const response = await authService.register(registerData)
       
       setSuccess(true)
       
-      // Redirect to dashboard after successful registration
+      // Redirect based on user role
+      const redirectPath = getRedirectPathByRole(response.user.role)
       setTimeout(() => {
-        navigate('/demo')
+        navigate(redirectPath)
       }, 2000)
       
     } catch (error: any) {
@@ -75,7 +148,9 @@ const RegisterPage: React.FC = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-green-100">
@@ -84,21 +159,24 @@ const RegisterPage: React.FC = () => {
               </svg>
             </div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              Registration Successful!
+              Welcome to SkillBridge Pro!
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600">
               Your account has been created successfully.<br />
-              Redirecting to login page...
+              Redirecting to dashboard...
             </p>
           </div>
+        </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl w-full space-y-8">
         <div>
           <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-md bg-indigo-500">
             <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,85 +184,320 @@ const RegisterPage: React.FC = () => {
             </svg>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
+            Join SkillBridge Pro
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-              sign in to existing account
-            </Link>
+            Connect with top talent or find your next opportunity
           </p>
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                autoComplete="name"
-                required
-                value={formData.name}
-                onChange={handleInputChange}
-                className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Enter your full name"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900">Basic Information</h3>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                    First Name
+                  </label>
+                  <input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    required
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    placeholder="First name"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                    Last Name
+                  </label>
+                  <input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    required
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    placeholder="Last name"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                  Email address
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  placeholder="Enter your email"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="userType" className="block text-sm font-medium text-gray-700 mb-1">
+                  I am a
+                </label>
+                <select
+                  id="userType"
+                  name="userType"
+                  value={formData.userType}
+                  onChange={handleInputChange}
+                  className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                >
+                  <option value={UserType.FREELANCER}>Freelancer</option>
+                  <option value={UserType.COMPANY}>Company</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  placeholder="Create a password"
+                />
+                <p className="mt-1 text-xs text-gray-500">Must be at least 6 characters long</p>
+              </div>
+
+              <div>
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirm Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  required
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  placeholder="Confirm your password"
+                />
+              </div>
             </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={formData.email}
-                onChange={handleInputChange}
-                className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Enter your email"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={formData.password}
-                onChange={handleInputChange}
-                className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Create a password"
-              />
-              <p className="mt-1 text-xs text-gray-500">Must be at least 6 characters long</p>
-            </div>
+            {/* Profile Specific Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                {formData.userType === UserType.FREELANCER ? 'Freelancer Profile' : 'Company Profile'}
+              </h3>
 
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Confirm your password"
-              />
+              {formData.userType === UserType.FREELANCER ? (
+                <>
+                  <div>
+                    <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-1">
+                      Skills (comma-separated)
+                    </label>
+                    <input
+                      id="skills"
+                      name="skills"
+                      type="text"
+                      value={formData.skills.join(', ')}
+                      onChange={handleSkillsChange}
+                      className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                      placeholder="React, TypeScript, Node.js"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="experience" className="block text-sm font-medium text-gray-700 mb-1">
+                      Years of Experience
+                    </label>
+                    <input
+                      id="experience"
+                      name="experience"
+                      type="number"
+                      min="0"
+                      value={formData.experience}
+                      onChange={handleInputChange}
+                      className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                      placeholder="5"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="dailyRate" className="block text-sm font-medium text-gray-700 mb-1">
+                      Daily Rate (€)
+                    </label>
+                    <input
+                      id="dailyRate"
+                      name="dailyRate"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.dailyRate}
+                      onChange={handleInputChange}
+                      className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                      placeholder="500"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="availability" className="block text-sm font-medium text-gray-700 mb-1">
+                      Availability
+                    </label>
+                    <input
+                      id="availability"
+                      name="availability"
+                      type="text"
+                      value={formData.availability}
+                      onChange={handleInputChange}
+                      className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                      placeholder="3 days/week, Full-time"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+                      Location
+                    </label>
+                    <input
+                      id="location"
+                      name="location"
+                      type="text"
+                      value={formData.location}
+                      onChange={handleInputChange}
+                      className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                      placeholder="Paris, France"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
+                      Bio
+                    </label>
+                    <textarea
+                      id="bio"
+                      name="bio"
+                      rows={3}
+                      value={formData.bio}
+                      onChange={handleInputChange}
+                      className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                      placeholder="Tell us about yourself and your expertise..."
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
+                      Company Name
+                    </label>
+                    <input
+                      id="companyName"
+                      name="companyName"
+                      type="text"
+                      required
+                      value={formData.companyName}
+                      onChange={handleInputChange}
+                      className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                      placeholder="Your Company Name"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="industry" className="block text-sm font-medium text-gray-700 mb-1">
+                      Industry
+                    </label>
+                    <input
+                      id="industry"
+                      name="industry"
+                      type="text"
+                      required
+                      value={formData.industry}
+                      onChange={handleInputChange}
+                      className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                      placeholder="Technology, Finance, Healthcare"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="size" className="block text-sm font-medium text-gray-700 mb-1">
+                      Company Size
+                    </label>
+                    <select
+                      id="size"
+                      name="size"
+                      value={formData.size}
+                      onChange={handleInputChange}
+                      className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                    >
+                      <option value="">Select size</option>
+                      <option value="STARTUP">Startup (1-10 employees)</option>
+                      <option value="SMALL">Small (11-50 employees)</option>
+                      <option value="MEDIUM">Medium (51-200 employees)</option>
+                      <option value="LARGE">Large (201-1000 employees)</option>
+                      <option value="ENTERPRISE">Enterprise (1000+ employees)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+                      Location
+                    </label>
+                    <input
+                      id="location"
+                      name="location"
+                      type="text"
+                      value={formData.location}
+                      onChange={handleInputChange}
+                      className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                      placeholder="Paris, France"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-1">
+                      Website (optional)
+                    </label>
+                    <input
+                      id="website"
+                      name="website"
+                      type="url"
+                      value={formData.website}
+                      onChange={handleInputChange}
+                      className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                      placeholder="https://yourcompany.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                      Company Description
+                    </label>
+                    <textarea
+                      id="description"
+                      name="description"
+                      rows={3}
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      className="relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                      placeholder="Tell us about your company..."
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -239,15 +552,16 @@ const RegisterPage: React.FC = () => {
             </button>
           </div>
 
-          <div className="mt-6">
-            <Link
-              to="/"
-              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              ← Back to Home
-            </Link>
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              Already have an account?{' '}
+              <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+                Sign in
+              </Link>
+            </p>
           </div>
         </form>
+      </div>
       </div>
     </div>
   )

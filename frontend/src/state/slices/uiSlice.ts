@@ -5,7 +5,7 @@ export interface Notification {
   type: 'success' | 'error' | 'warning' | 'info'
   title: string
   message: string
-  timestamp: Date
+  timestamp: string
   read: boolean
 }
 
@@ -42,7 +42,7 @@ const uiSlice = createSlice({
       const notification: Notification = {
         ...action.payload,
         id: Date.now().toString(),
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
         read: false,
       }
       state.notifications.unshift(notification)

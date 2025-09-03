@@ -2,24 +2,25 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
-  testMatch: [
-    '**/__tests__/**/*.ts',
-    '**/?(*.)+(spec|test).ts'
-  ],
+  testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
-  coverageDirectory: 'coverage',
   collectCoverageFrom: [
     'src/**/*.ts',
+    '!src/**/*.d.ts',
+    '!src/tests/**',
     '!src/**/*.test.ts',
     '!src/**/*.spec.ts',
-    '!src/tests/**',
-    '!src/**/*.d.ts',
   ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov', 'html'],
   setupFilesAfterEnv: ['<rootDir>/src/tests/setup.ts'],
-  verbose: true,
-  testTimeout: 10000,
-  // Add environment variables for testing
-  setupFiles: ['<rootDir>/jest.setup.js']
+  testTimeout: 30000,
+  // Set environment variables for tests
+  setupFiles: ['<rootDir>/jest.setup.js'],
+  // Handle Prisma client properly
+  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+  // Ensure proper cleanup
+  globalTeardown: '<rootDir>/src/tests/teardown.ts',
 }; 

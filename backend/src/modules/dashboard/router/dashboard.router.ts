@@ -34,10 +34,7 @@ const dashboardController = new DashboardController();
  *                       type: number
  *                     systemStatus:
  *                       type: string
- *                     totalProducts:
- *                       type: number
- *                     totalOrders:
- *                       type: number
+
  *       401:
  *         description: Unauthorized
  */

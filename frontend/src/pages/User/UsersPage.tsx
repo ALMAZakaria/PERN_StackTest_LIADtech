@@ -1,59 +1,70 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { User } from '../../services/api'
+import { useAppSelector } from '../../hooks/hooks'
+import { 
+  getRolePermissions, 
+  getAvailableRolesForUser, 
+  canDeleteUser
+} from '../../utils/roleUtils'
+import Header from '../../components/ui/Header'
 
-interface User {
-  id: string;
+// Local interface for demo data that includes name
+interface DemoUser extends Omit<User, 'firstName' | 'lastName' | 'role'> {
   name: string;
-  email: string;
-  role: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  role: string; // Use string for demo data
 }
 
 const UsersPage: React.FC = () => {
+  const currentUser = useAppSelector((state: any) => state.auth.user)
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [editingUser, setEditingUser] = useState<DemoUser | null>(null)
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     role: 'user' as 'user' | 'admin' | 'moderator'
   })
   
-  // Demo users data
-  const [users, setUsers] = useState<User[]>([
+  // Demo users data with CUID-like IDs
+  const [users, setUsers] = useState<DemoUser[]>([
     {
-      id: '1',
+      id: 'clh1234567890abcdef123456',
       name: 'Admin User',
       email: 'admin@demo.com',
-      role: 'admin',
+      role: 'admin' as string,
+      userType: 'FREELANCER' as any,
       isActive: true,
       createdAt: '2024-01-01',
       updatedAt: '2024-01-01'
     },
     {
-      id: '2',
+      id: 'clh2345678901bcdef1234567',
       name: 'John Doe',
       email: 'john@example.com',
-      role: 'user',
+      role: 'user' as string,
+      userType: 'FREELANCER' as any,
       isActive: true,
       createdAt: '2024-01-15',
       updatedAt: '2024-01-15'
     },
     {
-      id: '3',
+      id: 'clh3456789012cdef12345678',
       name: 'Jane Smith',
       email: 'jane@example.com',
-      role: 'user',
+      role: 'user' as string,
+      userType: 'FREELANCER' as any,
       isActive: true,
       createdAt: '2024-01-14',
       updatedAt: '2024-01-14'
     },
     {
-      id: '4',
+      id: 'clh4567890123def123456789',
       name: 'Mike Johnson',
       email: 'mike@example.com',
-      role: 'user',
+      role: 'user' as string,
+      userType: 'FREELANCER' as any,
       isActive: false,
       createdAt: '2024-01-13',
       updatedAt: '2024-01-13'
@@ -77,15 +88,21 @@ const UsersPage: React.FC = () => {
       setLoading(true)
       
       // Try to use the user service if backend is available
-      const { userService } = await import('../services/userService')
+      const { userService } = await import('../../services/userService')
       const response = await userService.getUsers({
         page: currentPage,
         limit: 20,
         search: searchTerm || undefined,
-        role: roleFilter || undefined
+        role: roleFilter ? roleFilter.toUpperCase() as 'USER' | 'ADMIN' | 'MODERATOR' : undefined
       })
       
-      setUsers(response.users)
+      // Convert API users to demo format
+      const demoUsers: DemoUser[] = response.users.map(user => ({
+        ...user,
+        name: `${user.firstName} ${user.lastName}`,
+        role: user.role.toLowerCase() as string
+      }))
+      setUsers(demoUsers)
       setTotalPages(response.meta.totalPages)
       setIsBackendConnected(true)
       setError('')
@@ -103,7 +120,7 @@ const UsersPage: React.FC = () => {
         );
       }
       if (roleFilter) {
-        filteredUsers = filteredUsers.filter(user => user.role === roleFilter);
+        filteredUsers = filteredUsers.filter(user => user.role.toLowerCase() === roleFilter.toLowerCase());
       }
       setUsers(filteredUsers)
     } finally {
@@ -121,27 +138,65 @@ const UsersPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    if (editingUser) {
+      await handleUpdateUser(e)
+      return
+    }
+    
+    // Client-side validation for create user
+    if (!formData.firstName.trim()) {
+      setError('First name is required')
+      return
+    }
+    if (!formData.lastName.trim()) {
+      setError('Last name is required')
+      return
+    }
+    if (!formData.email.trim()) {
+      setError('Email is required')
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError('Please enter a valid email address')
+      return
+    }
+    if (!formData.password.trim()) {
+      setError('Password is required')
+      return
+    }
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters long')
+      return
+    }
+    
     try {
       if (isBackendConnected) {
         // Use real API
-        const { userService } = await import('../services/userService')
+        const { userService } = await import('../../services/userService')
         const newUser = await userService.createUser(formData as any)
-        setUsers([newUser, ...users])
+        // Convert API user to demo format
+        const demoUser: DemoUser = {
+          ...newUser,
+          name: `${newUser.firstName} ${newUser.lastName}`,
+          role: newUser.role.toLowerCase() as string
+        }
+        setUsers([demoUser, ...users])
       } else {
         // Demo mode - create user locally
-        const newUser: User = {
-          id: String(users.length + 1),
-          name: formData.name,
+        const newUser: DemoUser = {
+          id: `clh${Date.now()}${Math.random().toString(36).substr(2, 9)}`,
+          name: `${formData.firstName} ${formData.lastName}`,
           email: formData.email,
-          role: formData.role,
+          role: formData.role as string,
           isActive: true,
           createdAt: new Date().toISOString().split('T')[0],
-          updatedAt: new Date().toISOString().split('T')[0]
+          updatedAt: new Date().toISOString().split('T')[0],
+          userType: 'FREELANCER' as any
         }
         setUsers([newUser, ...users])
       }
       
-      setFormData({ name: '', email: '', password: '', role: 'user' })
+      setFormData({ firstName: '', lastName: '', email: '', password: '', role: 'user' })
       setShowCreateForm(false)
       
       if (!isBackendConnected) {
@@ -149,7 +204,129 @@ const UsersPage: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Create user error:', error)
-      setError(error.message || 'Failed to create user')
+      
+      // Handle detailed validation errors from backend
+      if (error.response?.data?.message === 'Validation failed' && error.response?.data?.data) {
+        const validationErrors = error.response.data.data
+        const errorMessages = validationErrors.map((err: any) => `${err.field}: ${err.message}`).join(', ')
+        setError(`Validation failed: ${errorMessages}`)
+      } else {
+        setError(error.message || 'Failed to create user')
+      }
+    }
+  }
+
+  const handleEditUser = (user: DemoUser) => {
+    setEditingUser(user)
+    setShowCreateForm(true)
+    setFormData({
+      firstName: user.name.split(' ')[0] || '',
+      lastName: user.name.split(' ').slice(1).join(' ') || '',
+      email: user.email,
+      password: '',
+      role: user.role as 'user' | 'admin' | 'moderator'
+    })
+  }
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!editingUser) return
+
+    // Client-side validation
+    const trimmedFirstName = formData.firstName.trim()
+    const trimmedLastName = formData.lastName.trim()
+    const trimmedEmail = formData.email.trim()
+    
+    if (!trimmedFirstName) {
+      setError('First name is required')
+      return
+    }
+    if (!trimmedLastName) {
+      setError('Last name is required')
+      return
+    }
+    if (!trimmedEmail) {
+      setError('Email is required')
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setError('Please enter a valid email address')
+      return
+    }
+    
+    // Validate role
+    const validRoles = ['user', 'admin', 'moderator']
+    if (!validRoles.includes(formData.role)) {
+      setError('Please select a valid role')
+      return
+    }
+
+    try {
+      const updateData: any = {
+        firstName: trimmedFirstName,
+        lastName: trimmedLastName,
+        email: trimmedEmail,
+        role: formData.role.toUpperCase() as 'USER' | 'ADMIN' | 'MODERATOR',
+        isActive: Boolean(editingUser.isActive)
+      }
+      
+      // Validate user ID format (should be CUID)
+      if (!editingUser.id || typeof editingUser.id !== 'string') {
+        setError('Invalid user ID')
+        return
+      }
+
+      // Only include password if it's provided and meets minimum length
+      if (formData.password.trim()) {
+        if (formData.password.length < 8) {
+          setError('Password must be at least 8 characters long')
+          return
+        }
+        updateData.password = formData.password
+      }
+
+      if (isBackendConnected) {
+        // Use real API
+        const { userService } = await import('../../services/userService')
+        const updatedUser = await userService.updateUser(editingUser.id, updateData)
+        // Convert API user to demo format
+        const demoUser: DemoUser = {
+          ...updatedUser,
+          name: `${updatedUser.firstName} ${updatedUser.lastName}`,
+          role: updatedUser.role.toLowerCase() as string
+        }
+        setUsers(users.map(user => user.id === editingUser.id ? demoUser : user))
+      } else {
+        // Demo mode - update user locally
+        const updatedUser: DemoUser = {
+          ...editingUser,
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          role: formData.role as string,
+          updatedAt: new Date().toISOString().split('T')[0]
+        }
+        setUsers(users.map(user => user.id === editingUser.id ? updatedUser : user))
+      }
+      
+      setFormData({ firstName: '', lastName: '', email: '', password: '', role: 'user' })
+      setEditingUser(null)
+      setShowCreateForm(false)
+      
+      if (!isBackendConnected) {
+        setError('User updated in demo mode only. Start backend to persist changes.')
+      }
+    } catch (error: any) {
+      console.error('Update user error:', error)
+      
+      // Handle detailed validation errors from backend
+      if (error.response?.data?.message === 'Validation failed' && error.response?.data?.data) {
+        const validationErrors = error.response.data.data
+        const errorMessages = validationErrors.map((err: any) => `${err.field}: ${err.message}`).join(', ')
+        setError(`Validation failed: ${errorMessages}`)
+      } else {
+        setError(error.message || 'Failed to update user')
+      }
     }
   }
 
@@ -160,7 +337,7 @@ const UsersPage: React.FC = () => {
 
     try {
       if (isBackendConnected) {
-        const { userService } = await import('../services/userService')
+        const { userService } = await import('../../services/userService')
         await userService.deleteUser(userId)
       }
       
@@ -176,19 +353,25 @@ const UsersPage: React.FC = () => {
     }
   }
 
-  const handleLogout = async () => {
-    try {
-      const { authService } = await import('../services/authService')
-      await authService.logout()
-    } catch (error) {
-      console.warn('Auth service not available, doing local logout')
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      localStorage.removeItem('isAuthenticated')
-    } finally {
-      window.location.href = '/login'
-    }
+  // Check if current user has permission to access this page
+  if (!currentUser || !getRolePermissions(currentUser.role).canManageUsers) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+          <p className="text-gray-600 mb-4">You don't have permission to access user management.</p>
+          <Link 
+            to="/dashboard" 
+            className="text-indigo-600 hover:text-indigo-500 font-medium"
+          >
+            Return to Dashboard
+          </Link>
+        </div>
+      </div>
+    )
   }
+
+
 
   const getStatusBadge = (status: boolean) => {
     const baseClasses = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
@@ -214,40 +397,30 @@ const UsersPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Link to="/demo" className="text-gray-500 hover:text-gray-700 mr-4">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </Link>
-              <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-              {!isBackendConnected && (
-                <span className="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                  Demo Mode
-                </span>
-              )}
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setShowCreateForm(true)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Create New User
-              </button>
-              <button 
-                onClick={handleLogout}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Logout
-              </button>
-            </div>
+      <Header />
+      {/* Page Title */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+            {!isBackendConnected && (
+              <span className="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                Demo Mode
+              </span>
+            )}
           </div>
+          <button
+            onClick={() => {
+              setShowCreateForm(true)
+              setEditingUser(null)
+              setFormData({ firstName: '', lastName: '', email: '', password: '', role: 'user' })
+            }}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+          >
+            Create New User
+          </button>
         </div>
-      </header>
+      </div>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
@@ -298,24 +471,43 @@ const UsersPage: React.FC = () => {
             <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
                 <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-lg font-medium text-gray-900">Create New User</h3>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {editingUser ? 'Edit User' : 'Create New User'}
+                  </h3>
                 </div>
                 <form onSubmit={handleSubmit} className="px-6 py-4">
                   <div className="space-y-4">
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                        Full Name
-                      </label>
-                      <input
-                        type="text"
-                        id="name"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="Enter full name"
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+                          First Name
+                        </label>
+                        <input
+                          type="text"
+                          id="firstName"
+                          name="firstName"
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="Enter first name"
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+                          Last Name
+                        </label>
+                        <input
+                          type="text"
+                          id="lastName"
+                          name="lastName"
+                          value={formData.lastName}
+                          onChange={handleInputChange}
+                          required
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="Enter last name"
+                        />
+                      </div>
                     </div>
                     
                     <div>
@@ -336,7 +528,7 @@ const UsersPage: React.FC = () => {
                     
                     <div>
                       <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                        Password
+                        Password {editingUser && '(leave blank to keep current)'}
                       </label>
                       <input
                         type="password"
@@ -344,9 +536,9 @@ const UsersPage: React.FC = () => {
                         name="password"
                         value={formData.password}
                         onChange={handleInputChange}
-                        required={isBackendConnected}
+                        required={!editingUser && isBackendConnected}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder={isBackendConnected ? "Enter password" : "Demo password (not required)"}
+                        placeholder={editingUser ? "Enter new password (optional)" : (isBackendConnected ? "Enter password" : "Demo password (not required)")}
                       />
                     </div>
                     
@@ -361,9 +553,11 @@ const UsersPage: React.FC = () => {
                         onChange={handleInputChange}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       >
-                        <option value="user">User</option>
-                        <option value="moderator">Moderator</option>
-                        <option value="admin">Admin</option>
+                        {currentUser && getAvailableRolesForUser(currentUser.role).map(role => (
+                          <option key={role} value={role.toLowerCase()}>
+                            {role.charAt(0).toUpperCase() + role.slice(1).toLowerCase()}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   </div>
@@ -371,7 +565,11 @@ const UsersPage: React.FC = () => {
                   <div className="flex justify-end space-x-3 mt-6">
                     <button
                       type="button"
-                      onClick={() => setShowCreateForm(false)}
+                      onClick={() => {
+                        setShowCreateForm(false)
+                        setEditingUser(null)
+                        setFormData({ firstName: '', lastName: '', email: '', password: '', role: 'user' })
+                      }}
                       className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
                     >
                       Cancel
@@ -380,7 +578,7 @@ const UsersPage: React.FC = () => {
                       type="submit"
                       className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md transition-colors"
                     >
-                      Create User {!isBackendConnected && '(Demo)'}
+                      {editingUser ? 'Update User' : 'Create User'} {!isBackendConnected && '(Demo)'}
                     </button>
                   </div>
                 </form>
@@ -536,13 +734,20 @@ const UsersPage: React.FC = () => {
                             {new Date(user.createdAt).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button className="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
                             <button 
-                              onClick={() => handleDeleteUser(user.id)}
-                              className="text-red-600 hover:text-red-900"
+                              onClick={() => handleEditUser(user)}
+                              className="text-indigo-600 hover:text-indigo-900 mr-3"
                             >
-                              Delete {!isBackendConnected && '(Demo)'}
+                              Edit {!isBackendConnected && '(Demo)'}
                             </button>
+                            {currentUser && canDeleteUser(currentUser.role, user.role) && (
+                              <button 
+                                onClick={() => handleDeleteUser(user.id)}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                Delete {!isBackendConnected && '(Demo)'}
+                              </button>
+                            )}
                           </td>
                         </tr>
                       ))}

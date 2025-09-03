@@ -1,5 +1,7 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { getRedirectPathByRole } from '../../utils/roleUtils'
+import Header from '../../components/ui/Header'
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate()
@@ -28,28 +30,33 @@ const LoginPage: React.FC = () => {
       // Check for demo credentials first
       if (formData.email === 'admin@demo.com' && formData.password === 'demo123') {
         // Store demo authentication
-        localStorage.setItem('token', 'demo-token')
-        localStorage.setItem('user', JSON.stringify({
+        const demoUser = {
           id: '1',
           name: 'Admin User',
           email: 'admin@demo.com',
           role: 'admin'
-        }))
+        }
+        localStorage.setItem('token', 'demo-token')
+        localStorage.setItem('user', JSON.stringify(demoUser))
         localStorage.setItem('isAuthenticated', 'true')
         
-        // Navigate to dashboard
-        navigate('/demo')
+        // Navigate based on role
+        const redirectPath = getRedirectPathByRole(demoUser.role)
+        navigate(redirectPath)
         return
       }
 
       // Try to use the auth service (will be available when backend is running)
       try {
         const { authService } = await import('../../services/authService')
-        await authService.login(formData)
-        navigate('/demo')
+        const response = await authService.login(formData)
+        
+        // Navigate based on user role
+        const redirectPath = getRedirectPathByRole(response.user.role)
+        navigate(redirectPath)
       } catch (importError) {
         console.warn('Auth service not available, using demo mode:', importError)
-        setError('Backend server not running. Use demo credentials: admin@demo.com / demo123')
+        setError('Backend server not running. Use demo credentials: test@demo.com / demo123456')
       }
     } catch (error: any) {
       console.error('Login error:', error)
@@ -60,7 +67,9 @@ const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-md bg-indigo-500">
@@ -175,8 +184,8 @@ const LoginPage: React.FC = () => {
           <div className="mt-6 p-4 bg-blue-50 rounded-md">
             <h4 className="text-sm font-medium text-blue-800 mb-2">Demo Credentials:</h4>
             <p className="text-sm text-blue-600">
-              Email: <code className="bg-blue-100 px-1 rounded">admin@demo.com</code><br />
-              Password: <code className="bg-blue-100 px-1 rounded">demo123</code>
+              Email: <code className="bg-blue-100 px-1 rounded">test@demo.com</code><br />
+              Password: <code className="bg-blue-100 px-1 rounded">demo123456</code>
             </p>
           </div>
 
@@ -189,6 +198,7 @@ const LoginPage: React.FC = () => {
             </Link>
           </div>
         </form>
+      </div>
       </div>
     </div>
   )

@@ -10,11 +10,13 @@ import {
   ChangePasswordDto,
   GetUsersQueryDto,
   UserResponseDto,
+  SimpleCreateUserDto,
 } from '../dto/user.dto';
 import {
   NotFoundError,
   ConflictError,
   AuthenticationError,
+  AuthorizationError,
   ValidationError,
 } from '../../../utils/error-handler';
 
@@ -23,6 +25,28 @@ export class UserService {
 
   constructor() {
     this.userRepository = new UserRepository();
+  }
+
+  async simpleCreateUser(userData: SimpleCreateUserDto): Promise<UserResponseDto> {
+    // Check if user already exists
+    const existingUser = await this.userRepository.findByEmail(userData.email);
+    if (existingUser) {
+      throw new ConflictError('User with this email already exists');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(userData.password, config.BCRYPT_ROUNDS);
+
+    // Create user
+    const user = await this.userRepository.createWithRole({
+      email: userData.email,
+      password: hashedPassword,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      role: userData.role,
+    });
+
+    return this.mapToResponseDto(user);
   }
 
   async register(userData: CreateUserDto): Promise<{
@@ -55,11 +79,16 @@ export class UserService {
     };
   }
 
-  async createUser(userData: CreateUserDto): Promise<UserResponseDto> {
+  async createUser(userData: CreateUserDto, currentUserRole?: string): Promise<UserResponseDto> {
     // Check if user already exists
     const existingUser = await this.userRepository.findByEmail(userData.email);
     if (existingUser) {
       throw new ConflictError('User with this email already exists');
+    }
+
+    // Role-based validation
+    if (currentUserRole === 'MODERATOR' && userData.role && userData.role.toUpperCase() !== 'USER') {
+      throw new AuthorizationError('Moderators can only create USER roles');
     }
 
     // Hash password
@@ -69,6 +98,7 @@ export class UserService {
     const user = await this.userRepository.create({
       ...userData,
       password: hashedPassword,
+      role: (userData.role?.toUpperCase() || 'USER') as 'USER' | 'ADMIN' | 'MODERATOR', // Use provided role or default to USER
     });
 
     return this.mapToResponseDto(user);
@@ -175,7 +205,7 @@ export class UserService {
     await this.userRepository.updatePassword(userId, hashedNewPassword);
   }
 
-  async getUsers(query: GetUsersQueryDto): Promise<{
+  async getUsers(query: GetUsersQueryDto, currentUserRole?: string): Promise<{
     users: UserResponseDto[];
     meta: {
       total: number;
@@ -184,6 +214,12 @@ export class UserService {
       totalPages: number;
     };
   }> {
+    // Apply role-based filtering for MODERATOR users
+    if (currentUserRole === 'MODERATOR') {
+      // Moderators can only see USER roles
+      query.role = 'USER';
+    }
+    
     const result = await this.userRepository.findMany(query);
     
     return {
@@ -206,10 +242,64 @@ export class UserService {
     return this.mapToResponseDto(user);
   }
 
-  async deleteUser(id: string): Promise<void> {
+  async updateUser(id: string, updateData: UpdateUserDto, currentUserRole?: string): Promise<UserResponseDto> {
     const user = await this.userRepository.findById(id);
     if (!user) {
       throw new NotFoundError('User not found');
+    }
+
+    // Role-based validation
+    if (currentUserRole === 'MODERATOR') {
+      if (user.role !== 'USER') {
+        throw new AuthorizationError('Moderators can only update USER roles');
+      }
+      // Moderators can only update certain fields
+      const { role, isActive, password, ...allowedFields } = updateData;
+      if (role || isActive !== undefined || password) {
+        throw new AuthorizationError('Moderators cannot update role, active status, or password');
+      }
+    }
+
+    // Check email uniqueness if email is being updated
+    if (updateData.email && updateData.email !== user.email) {
+      const emailExists = await this.userRepository.existsByEmail(updateData.email, id);
+      if (emailExists) {
+        throw new ConflictError('Email is already in use');
+      }
+    }
+
+    // Handle password update if provided
+    let finalUpdateData = { ...updateData };
+    if (updateData.password) {
+      const hashedPassword = await bcrypt.hash(updateData.password, config.BCRYPT_ROUNDS);
+      finalUpdateData = { ...updateData, password: hashedPassword };
+    } else {
+      // Remove password from update data if not provided
+      const { password, ...dataWithoutPassword } = updateData;
+      finalUpdateData = dataWithoutPassword;
+    }
+
+    // Update user
+    const updatedUser = await this.userRepository.update(id, finalUpdateData);
+    return this.mapToResponseDto(updatedUser);
+  }
+
+  async deleteUser(id: string, currentUserRole?: string, currentUserId?: string): Promise<void> {
+    const user = await this.userRepository.findById(id);
+    if (!user) {
+      throw new NotFoundError('User not found');
+    }
+
+    // Role-based validation
+    if (currentUserRole === 'MODERATOR') {
+      if (user.role !== 'USER') {
+        throw new AuthorizationError('Moderators can only delete USER roles');
+      }
+    }
+
+    // Prevent users from deleting themselves
+    if (currentUserId && currentUserId === id) {
+      throw new AuthorizationError('Users cannot delete themselves');
     }
 
     await this.userRepository.delete(id);
@@ -217,7 +307,7 @@ export class UserService {
 
   private generateTokens(user: User): { accessToken: string; refreshToken: string } {
     const payload = {
-      id: user.id,
+      userId: user.id,
       email: user.email,
       role: user.role,
     };

@@ -1,15 +1,18 @@
 import api, { ApiResponse, User } from './api';
 
 export interface CreateUserData {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   role: 'user' | 'admin' | 'moderator';
 }
 
 export interface UpdateUserData {
-  name?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
+  password?: string;
   role?: string;
   isActive?: boolean;
 }
@@ -47,11 +50,11 @@ class UserService {
       if (response.data.success && response.data.data) {
         return {
           users: response.data.data,
-          meta: response.data.meta || {
-            page: params.page || 1,
-            limit: params.limit || 20,
-            total: response.data.data.length,
-            totalPages: 1
+          meta: {
+            page: response.data.meta?.page || params.page || 1,
+            limit: response.data.meta?.limit || params.limit || 20,
+            total: response.data.meta?.total || response.data.data.length,
+            totalPages: response.data.meta?.totalPages || 1
           }
         };
       } else {
@@ -74,6 +77,13 @@ class UserService {
         throw new Error(response.data.message || 'Failed to create user');
       }
     } catch (error: any) {
+      // Handle validation errors with detailed messages
+      if (error.response?.data?.message === 'Validation failed' && error.response?.data?.data) {
+        const validationErrors = error.response.data.data;
+        const errorMessages = validationErrors.map((err: any) => `${err.field}: ${err.message}`).join(', ');
+        throw new Error(`Validation failed: ${errorMessages}`);
+      }
+      
       const message = error.response?.data?.message || error.message || 'Failed to create user';
       throw new Error(message);
     }
@@ -106,6 +116,13 @@ class UserService {
         throw new Error(response.data.message || 'Failed to update user');
       }
     } catch (error: any) {
+      // Handle validation errors with detailed messages
+      if (error.response?.data?.message === 'Validation failed' && error.response?.data?.data) {
+        const validationErrors = error.response.data.data;
+        const errorMessages = validationErrors.map((err: any) => `${err.field}: ${err.message}`).join(', ');
+        throw new Error(`Validation failed: ${errorMessages}`);
+      }
+      
       const message = error.response?.data?.message || error.message || 'Failed to update user';
       throw new Error(message);
     }

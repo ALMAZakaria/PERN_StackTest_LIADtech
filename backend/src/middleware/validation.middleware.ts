@@ -26,21 +26,7 @@ export function validateRequest(schema: any) {
         }
       } else {
         // Handle the direct Zod object style (auth schemas)
-        const validatedData = schema.parse({
-          body: req.body,
-          params: req.params,
-          query: req.query,
-        });
-
-        if (validatedData.body) {
-          req.body = validatedData.body;
-        }
-        if (validatedData.params) {
-          req.params = validatedData.params;
-        }
-        if (validatedData.query) {
-          req.query = validatedData.query;
-        }
+        req.body = schema.parse(req.body);
       }
 
       next();

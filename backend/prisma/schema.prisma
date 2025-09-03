@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,79 +8,175 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  firstName String
-  lastName  String
-  role      Role     @default(USER)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  orders Order[]
+  id                             String            @id @default(cuid())
+  email                          String            @unique
+  password                       String
+  firstName                      String
+  lastName                       String
+  role                           Role              @default(USER)
+  userType                       UserType          @default(FREELANCER)
+  isActive                       Boolean           @default(true)
+  createdAt                      DateTime          @default(now())
+  updatedAt                      DateTime          @updatedAt
+  companyProfile                 CompanyProfile?
+  freelanceProfile               FreelanceProfile?
+  ratings_ratings_ratedIdTousers Rating[]          @relation("ratings_ratedIdTousers")
+  ratings_ratings_raterIdTousers Rating[]          @relation("ratings_raterIdTousers")
 
   @@map("users")
 }
 
-model Product {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  price       Decimal  @db.Decimal(10, 2)
-  stock       Int      @default(0)
-  imageUrl    String?
-  category    String
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+model FreelanceProfile {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  skills             String[]
+  dailyRate          Decimal            @db.Decimal(8, 2)
+  availability       Int
+  bio                String?
+  location           String?
+  experience         Int
+  isVerified         Boolean            @default(false)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  sentApplications   Application[]      @relation("FreelancerApplications")
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  portfolio_projects PortfolioProject[]
 
-  // Relations
-  orderItems OrderItem[]
-
-  @@map("products")
+  @@map("freelance_profiles")
 }
 
-model Order {
+model CompanyProfile {
   id          String      @id @default(cuid())
-  userId      String
-  status      OrderStatus @default(PENDING)
-  totalAmount Decimal     @db.Decimal(10, 2)
+  userId      String      @unique
+  companyName String
+  industry    String
+  size        CompanySize @default(SMALL)
+  description String?
+  website     String?
+  location    String?
+  isVerified  Boolean     @default(false)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  missions    Mission[]
+  applications Application[]
 
-  // Relations
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orderItems OrderItem[]
-
-  @@map("orders")
+  @@map("company_profiles")
 }
 
-model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  productId String
-  quantity  Int
-  price     Decimal @db.Decimal(10, 2)
+model Mission {
+  id             String         @id @default(cuid())
+  title          String
+  description    String
+  requiredSkills String[]
+  budget         Decimal        @db.Decimal(10, 2)
+  duration       Int
+  location       String?
+  isRemote       Boolean        @default(true)
+  status         MissionStatus  @default(OPEN)
+  urgency        UrgencyLevel   @default(NORMAL)
+  companyId      String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  applications   Application[]
+  company        CompanyProfile @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
-  // Relations
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@unique([orderId, productId])
-  @@map("order_items")
+  @@map("missions")
 }
+
+model Application {
+  id                String            @id @default(cuid())
+  missionId         String
+  freelancerId      String
+  companyId         String
+  proposal          String
+  proposedRate      Decimal           @db.Decimal(8, 2)
+  estimatedDuration Int
+  status            ApplicationStatus @default(PENDING)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  freelancer        FreelanceProfile  @relation("FreelancerApplications", fields: [freelancerId], references: [id], onDelete: Cascade)
+  mission           Mission           @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  company           CompanyProfile    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  ratings           Rating[]
+
+  @@unique([missionId, freelancerId])
+  @@map("applications")
+}
+
+model PortfolioProject {
+  id                 String           @id @default(cuid())
+  title              String
+  description        String
+  technologies       String[]
+  imageUrl           String?
+  projectUrl         String?
+  githubUrl          String?
+  freelancerId       String
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  freelance_profiles FreelanceProfile @relation(fields: [freelancerId], references: [id], onDelete: Cascade)
+
+  @@map("portfolio_projects")
+}
+
+model Rating {
+  id                           String   @id @default(cuid())
+  fromUserId                   String
+  toUserId                     String
+  applicationId                String?
+  rating                       Int
+  comment                      String?
+  createdAt                    DateTime @default(now())
+  users_ratings_ratedIdTousers User     @relation("ratings_ratedIdTousers", fields: [toUserId], references: [id], onDelete: Cascade)
+  users_ratings_raterIdTousers User     @relation("ratings_raterIdTousers", fields: [fromUserId], references: [id], onDelete: Cascade)
+  application                  Application? @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId, applicationId])
+  @@map("ratings")
+}
+
+
 
 enum Role {
   USER
   ADMIN
+  MODERATOR
 }
 
-enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
+enum UserType {
+  FREELANCER
+  COMPANY
+}
+
+enum CompanySize {
+  STARTUP
+  SMALL
+  MEDIUM
+  LARGE
+  ENTERPRISE
+}
+
+enum MissionStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
   CANCELLED
-} 
+  EXPIRED
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+
+
+enum UrgencyLevel {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}

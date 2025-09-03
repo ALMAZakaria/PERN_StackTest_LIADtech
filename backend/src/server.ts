@@ -22,9 +22,13 @@ async function startServer() {
     await prisma.$connect();
     logger.info('Connected to PostgreSQL database');
 
-    // Initialize Redis connection
-    await redisClient.connect();
-    logger.info('Connected to Redis');
+    // Initialize Redis connection (optional)
+    try {
+      await redisClient.connect();
+      logger.info('Connected to Redis');
+    } catch (redisError) {
+      logger.warn('Redis connection failed, continuing without Redis:', redisError);
+    }
 
     // Start HTTP server
     const server = app.listen(config.PORT, () => {
@@ -47,8 +51,12 @@ async function startServer() {
           await prisma.$disconnect();
           logger.info('Database connection closed');
           
-          await redisClient.disconnect();
-          logger.info('Redis connection closed');
+          try {
+            await redisClient.disconnect();
+            logger.info('Redis connection closed');
+          } catch (redisError) {
+            logger.warn('Redis disconnect error:', redisError);
+          }
           
           logger.info('Graceful shutdown completed');
           process.exit(0);

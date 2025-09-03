@@ -21,6 +21,12 @@ export const errorHandler = (
     userAgent: req.get('User-Agent'),
   });
 
+  // Handle JSON parsing errors
+  if (error instanceof SyntaxError && 'body' in error) {
+    res.status(400).json({ success: false, message: 'Invalid JSON format' });
+    return;
+  }
+
   // Handle known operational errors
   if (error instanceof AppError) {
     res.status(error.statusCode).json({

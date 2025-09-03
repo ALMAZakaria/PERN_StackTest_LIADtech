@@ -89,6 +89,10 @@ export class UserCache {
     try {
       // Get all user list keys and delete them
       const client = redisClient.getClient();
+      if (!client) {
+        // Redis client not available, skip cache clearing
+        return;
+      }
       const keys = await client.keys(`${this.USER_LIST_KEY_PREFIX}*`);
       if (keys.length > 0) {
         await client.del(keys);

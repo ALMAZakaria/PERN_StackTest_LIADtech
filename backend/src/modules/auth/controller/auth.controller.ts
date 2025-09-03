@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../service/auth.service';
 import { ResponseUtil } from '../../../utils/response';
-import { RegisterDto, LoginDto } from '../dto/auth.dto';
+import { RegisterDto, LoginDto, SimpleRegisterDto } from '../dto/auth.dto';
 import { AuthRequest } from '../../../middleware/auth.middleware';
 
 export class AuthController {
@@ -10,6 +10,17 @@ export class AuthController {
   constructor() {
     this.authService = new AuthService();
   }
+
+  simpleRegister = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const userData: SimpleRegisterDto = req.body;
+      const result = await this.authService.simpleRegister(userData);
+
+      ResponseUtil.created(res, result, 'User registered successfully');
+    } catch (error) {
+      next(error);
+    }
+  };
 
   register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {

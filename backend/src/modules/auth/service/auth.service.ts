@@ -1,15 +1,21 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaClient, Role } from '@prisma/client';
-import { RegisterDto, LoginDto, AuthResponse } from '../dto/auth.dto';
+import { RegisterDto, LoginDto, AuthResponse, SimpleRegisterDto } from '../dto/auth.dto';
 import { AppError } from '../../../utils/AppError';
 import { config } from '../../../config/server';
+import { ConflictError } from '../../../utils/error-handler';
 
 const prisma = new PrismaClient();
 
 export class AuthService {
-  private generateTokens(userId: string, role: Role) {
-    const payload = { userId, role: role.toString() };
+  private generateTokens(userId: string, role: Role, email: string, userType?: string) {
+    const payload = { 
+      userId, 
+      email,
+      role: role.toString(),
+      userType: userType || 'FREELANCER'
+    };
     
     const accessToken = jwt.sign(
       payload,
@@ -26,8 +32,91 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  async simpleRegister(userData: SimpleRegisterDto): Promise<AuthResponse> {
+    const { firstName, lastName, email, password } = userData;
+    
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      throw new ConflictError('User already exists');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, config.BCRYPT_ROUNDS);
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        firstName,
+        lastName,
+        role: Role.USER,
+        userType: 'FREELANCER'
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        userType: true,
+        isActive: true,
+        createdAt: true
+      }
+    });
+
+    // Generate tokens
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      config.JWT_SECRET,
+      { expiresIn: config.JWT_EXPIRES_IN }
+    );
+
+    const refreshToken = jwt.sign(
+      { userId: user.id },
+      config.JWT_REFRESH_SECRET,
+      { expiresIn: config.JWT_REFRESH_EXPIRES_IN }
+    );
+
+    return {
+      user: {
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        userType: user.userType,
+        isActive: user.isActive,
+        createdAt: user.createdAt
+      },
+      token,
+      refreshToken
+    };
+  }
+
   async register(userData: RegisterDto): Promise<AuthResponse> {
-    const { name, email, password } = userData;
+    const { 
+      firstName, 
+      lastName, 
+      email, 
+      password, 
+      userType,
+      companyName,
+      industry,
+      size,
+      description,
+      website,
+      skills,
+      dailyRate,
+      availability,
+      experience,
+      location,
+      bio
+    } = userData;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -41,42 +130,72 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Split name into firstName and lastName
-    const nameParts = name.trim().split(' ');
-    const firstName = nameParts[0];
-    const lastName = nameParts.slice(1).join(' ') || '';
+    // Create user with transaction to handle profile creation
+    const result = await prisma.$transaction(async (tx) => {
+      // Create user
+      const user = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          firstName,
+          lastName,
+          role: Role.USER,
+          userType: userType as any,
+        },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          userType: true,
+          isActive: true,
+          createdAt: true,
+        }
+      });
 
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        firstName,
-        lastName,
-        role: Role.USER, // Default role
-      },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
+      // Create profile based on user type
+      if (userType === 'COMPANY' && companyName && industry && size) {
+        await tx.companyProfile.create({
+          data: {
+            userId: user.id,
+            companyName,
+            industry,
+            size: size as any,
+            description: description || null,
+            website: website || null,
+          }
+        });
+      } else if (userType === 'FREELANCER' && skills && dailyRate && availability !== undefined && experience !== undefined) {
+        await tx.freelanceProfile.create({
+          data: {
+            userId: user.id,
+            skills,
+            dailyRate: dailyRate,
+            availability,
+            experience,
+            bio: bio || null,
+            location: location || null,
+          }
+        });
       }
+
+      return user;
     });
 
     // Generate tokens
-    const { accessToken, refreshToken } = this.generateTokens(user.id, user.role);
+    const { accessToken, refreshToken } = this.generateTokens(result.id, result.role, result.email, result.userType);
 
     return {
       user: {
-        id: user.id,
-        name: `${user.firstName} ${user.lastName}`.trim(),
-        email: user.email,
-        role: user.role,
-        isActive: user.isActive,
-        createdAt: user.createdAt,
+        id: result.id,
+        firstName: result.firstName,
+        lastName: result.lastName,
+        email: result.email,
+        role: result.role,
+        userType: result.userType,
+        isActive: result.isActive,
+        createdAt: result.createdAt,
       },
       token: accessToken,
       refreshToken,
@@ -96,6 +215,7 @@ export class AuthService {
         firstName: true,
         lastName: true,
         role: true,
+        userType: true,
         isActive: true,
         createdAt: true,
       }
@@ -116,14 +236,16 @@ export class AuthService {
     }
 
     // Generate tokens
-    const { accessToken, refreshToken } = this.generateTokens(user.id, user.role);
+    const { accessToken, refreshToken } = this.generateTokens(user.id, user.role, user.email, user.userType);
 
     return {
       user: {
         id: user.id,
-        name: `${user.firstName} ${user.lastName}`.trim(),
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         role: user.role,
+        userType: user.userType,
         isActive: user.isActive,
         createdAt: user.createdAt,
       },

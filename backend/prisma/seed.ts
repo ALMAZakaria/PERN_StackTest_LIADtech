@@ -7,14 +7,15 @@ async function main() {
   console.log('🌱 Starting database seeding...');
 
   // Create sample users
-  const hashedPassword = await bcrypt.hash('password123', 12);
+  const adminPassword = await bcrypt.hash('demo123', 12);
+  const userPassword = await bcrypt.hash('demo123', 12);
 
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@example.com' },
+    where: { email: 'admin@demo.com' },
     update: {},
     create: {
-      email: 'admin@example.com',
-      password: hashedPassword,
+      email: 'admin@demo.com',
+      password: adminPassword,
       firstName: 'Admin',
       lastName: 'User',
       role: 'ADMIN',
@@ -22,11 +23,11 @@ async function main() {
   });
 
   const regularUser = await prisma.user.upsert({
-    where: { email: 'user@example.com' },
+    where: { email: 'john@example.com' },
     update: {},
     create: {
-      email: 'user@example.com',
-      password: hashedPassword,
+      email: 'john@example.com',
+      password: userPassword,
       firstName: 'John',
       lastName: 'Doe',
       role: 'USER',
@@ -35,78 +36,82 @@ async function main() {
 
   console.log('👥 Created users:', { adminUser, regularUser });
 
-  // Create sample products
-  const products = await Promise.all([
-    prisma.product.upsert({
-      where: { id: 'laptop-001' },
-      update: {},
-      create: {
-        id: 'laptop-001',
-        name: 'MacBook Pro 16"',
-        description: 'High-performance laptop for professionals',
-        price: 2499.99,
-        stock: 10,
-        category: 'Electronics',
-        imageUrl: 'https://example.com/macbook.jpg',
-      },
-    }),
-    prisma.product.upsert({
-      where: { id: 'phone-001' },
-      update: {},
-      create: {
-        id: 'phone-001',
-        name: 'iPhone 15 Pro',
-        description: 'Latest iPhone with advanced features',
-        price: 999.99,
-        stock: 25,
-        category: 'Electronics',
-        imageUrl: 'https://example.com/iphone.jpg',
-      },
-    }),
-    prisma.product.upsert({
-      where: { id: 'headphones-001' },
-      update: {},
-      create: {
-        id: 'headphones-001',
-        name: 'AirPods Pro',
-        description: 'Wireless noise-canceling headphones',
-        price: 249.99,
-        stock: 50,
-        category: 'Electronics',
-        imageUrl: 'https://example.com/airpods.jpg',
-      },
-    }),
-  ]);
-
-  console.log('📦 Created products:', products);
-
-  // Create sample order
-  const order = await prisma.order.create({
-    data: {
-      userId: regularUser.id,
-      status: 'PENDING',
-      totalAmount: 1249.98,
-      orderItems: {
-        create: [
-          {
-            productId: products[1].id, // iPhone
-            quantity: 1,
-            price: 999.99,
-          },
-          {
-            productId: products[2].id, // AirPods
-            quantity: 1,
-            price: 249.99,
-          },
-        ],
-      },
-    },
-    include: {
-      orderItems: true,
+  // Create sample SkillBridge Pro data
+  const freelanceUser = await prisma.user.upsert({
+    where: { email: 'freelancer@skillbridge.com' },
+    update: {},
+    create: {
+      email: 'freelancer@skillbridge.com',
+      password: userPassword,
+      firstName: 'Alex',
+      lastName: 'Developer',
+      role: 'USER',
+      userType: 'FREELANCER',
     },
   });
 
-  console.log('🛒 Created order:', order);
+  const companyUser = await prisma.user.upsert({
+    where: { email: 'company@skillbridge.com' },
+    update: {},
+    create: {
+      email: 'company@skillbridge.com',
+      password: userPassword,
+      firstName: 'Sarah',
+      lastName: 'Manager',
+      role: 'USER',
+      userType: 'COMPANY',
+    },
+  });
+
+  // Create freelance profile
+  const freelanceProfile = await prisma.freelanceProfile.upsert({
+    where: { userId: freelanceUser.id },
+    update: {},
+    create: {
+      userId: freelanceUser.id,
+      bio: 'Senior React Developer with 5+ years of experience',
+      skills: ['React', 'TypeScript', 'Node.js', 'Next.js'],
+      dailyRate: 500.00,
+      availability: 40,
+      location: 'Paris, France',
+      experience: 5,
+    },
+  });
+
+  // Create company profile
+  const companyProfile = await prisma.companyProfile.upsert({
+    where: { userId: companyUser.id },
+    update: {},
+    create: {
+      userId: companyUser.id,
+      companyName: 'TechStartup Inc',
+      industry: 'Technology',
+      size: 'STARTUP',
+      description: 'Innovative startup building the next big thing',
+      website: 'https://techstartup.com',
+      location: 'San Francisco, CA',
+    },
+  });
+
+  // Create sample mission
+  const mission = await prisma.mission.create({
+    data: {
+      title: 'React Developer Needed for E-commerce Platform',
+      description: 'Looking for a senior React developer to help build a modern e-commerce platform. Experience with TypeScript and Next.js required.',
+      requiredSkills: ['React', 'TypeScript', 'Next.js'],
+      budget: 8000.00,
+      duration: 6,
+      location: 'Remote',
+      isRemote: true,
+      companyId: companyProfile.id,
+    },
+  });
+
+  console.log('🚀 Created SkillBridge Pro data:', {
+    freelanceProfile,
+    companyProfile,
+    mission
+  });
 
   console.log('✅ Database seeding completed successfully!');
 }

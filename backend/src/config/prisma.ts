@@ -7,6 +7,11 @@ declare global {
 
 const prisma = global.__prisma || new PrismaClient({
   log: config.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  datasources: {
+    db: {
+      url: config.DATABASE_URL,
+    },
+  },
 });
 
 if (config.NODE_ENV === 'development') {

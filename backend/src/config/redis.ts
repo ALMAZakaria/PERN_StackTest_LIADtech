@@ -1,50 +1,63 @@
 import { createClient } from 'redis';
 import { config } from './server';
-import logger from '../../src/utils/logger';
+import logger from '../utils/logger';
 
 class RedisClient {
   private client;
   private isConnected = false;
 
   constructor() {
-    this.client = createClient({
-      url: config.REDIS_URL,
-      password: config.REDIS_PASSWORD || undefined,
-    });
+    // Only create Redis client if Redis is enabled
+    if (config.REDIS_URL && config.REDIS_URL !== 'redis://localhost:6379') {
+      this.client = createClient({
+        url: config.REDIS_URL,
+        password: config.REDIS_PASSWORD || undefined,
+      });
 
-    this.client.on('error', (err) => {
-      logger.error('Redis Client Error:', err);
-      this.isConnected = false;
-    });
+      this.client.on('error', (err) => {
+        logger.error('Redis Client Error:', err);
+        this.isConnected = false;
+      });
 
-    this.client.on('connect', () => {
-      logger.info('Redis Client Connected');
-      this.isConnected = true;
-    });
+      this.client.on('connect', () => {
+        logger.info('Redis Client Connected');
+        this.isConnected = true;
+      });
 
-    this.client.on('ready', () => {
-      logger.info('Redis Client Ready');
-    });
+      this.client.on('ready', () => {
+        logger.info('Redis Client Ready');
+      });
 
-    this.client.on('end', () => {
-      logger.info('Redis Client Disconnected');
-      this.isConnected = false;
-    });
+      this.client.on('end', () => {
+        logger.info('Redis Client Disconnected');
+        this.isConnected = false;
+      });
+    } else {
+      logger.info('Redis disabled - skipping Redis client initialization');
+    }
   }
 
   async connect(): Promise<void> {
     try {
+      if (!this.client) {
+        logger.info('Redis client not initialized, skipping connection');
+        return;
+      }
       if (!this.isConnected) {
         await this.client.connect();
       }
     } catch (error) {
-      logger.error('Failed to connect to Redis:', error);
-      throw error;
+      logger.warn('Failed to connect to Redis, continuing without Redis:', error);
+      // Don't throw error, just log it and continue
     }
   }
 
   async disconnect(): Promise<void> {
     try {
+      if (!this.client) {
+        logger.info('Redis client not initialized, skipping disconnect');
+        return;
+      }
       if (this.isConnected) {
         await this.client.disconnect();
       }
@@ -56,6 +69,10 @@ class RedisClient {
 
   async get(key: string): Promise<string | null> {
     try {
+      if (!this.client) {
+        logger.debug('Redis client not available, returning null');
+        return null;
+      }
       if (!this.isConnected) {
         await this.connect();
       }
@@ -68,6 +85,10 @@ class RedisClient {
 
   async set(key: string, value: string, ttl?: number): Promise<boolean> {
     try {
+      if (!this.client) {
+        logger.debug('Redis client not available, returning false');
+        return false;
+      }
       if (!this.isConnected) {
         await this.connect();
       }
@@ -86,6 +107,10 @@ class RedisClient {
 
   async del(key: string): Promise<boolean> {
     try {
+      if (!this.client) {
+        logger.debug('Redis client not available, returning false');
+        return false;
+      }
       if (!this.isConnected) {
         await this.connect();
       }
@@ -99,6 +124,10 @@ class RedisClient {
 
   async exists(key: string): Promise<boolean> {
     try {
+      if (!this.client) {
+        logger.debug('Redis client not available, returning false');
+        return false;
+      }
       if (!this.isConnected) {
         await this.connect();
       }
@@ -111,7 +140,7 @@ class RedisClient {
   }
 
   getClient() {
-    return this.client;
+    return this.client || null;
   }
 }
 

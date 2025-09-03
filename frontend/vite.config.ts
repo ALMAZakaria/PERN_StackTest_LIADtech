@@ -22,12 +22,16 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    // Proxy removed for production - API calls go directly to production backend
+    // Uncomment below for local development
+    /*
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://pern-stacktest-liadtech-1.onrender.com',
         changeOrigin: true,
       },
     },
+    */
   },
   build: {
     sourcemap: true,
