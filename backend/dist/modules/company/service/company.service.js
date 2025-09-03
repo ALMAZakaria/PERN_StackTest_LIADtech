@@ -8,20 +8,35 @@ class CompanyService {
         this.companyRepository = new company_repository_1.CompanyRepository();
     }
     async createProfile(userId, data) {
-        const existingProfile = await this.companyRepository.findByUserId(userId);
-        if (existingProfile) {
-            throw new AppError_1.AppError('Company profile already exists for this user', 400);
+        try {
+            const existingProfile = await this.companyRepository.findByUserId(userId);
+            if (existingProfile) {
+                throw new AppError_1.AppError('Company profile already exists for this user', 400);
+            }
+            if (!data.companyName.trim()) {
+                throw new AppError_1.AppError('Company name is required', 400);
+            }
+            if (!data.industry.trim()) {
+                throw new AppError_1.AppError('Industry is required', 400);
+            }
+            return this.companyRepository.create({
+                ...data,
+                userId,
+            });
         }
-        if (!data.companyName.trim()) {
-            throw new AppError_1.AppError('Company name is required', 400);
+        catch (error) {
+            if (error.code === 'P2002' && error.meta?.target?.includes('userId')) {
+                throw new AppError_1.AppError('Company profile already exists for this user', 400);
+            }
+            if (error instanceof AppError_1.AppError) {
+                throw error;
+            }
+            if (error.code === 'P2002') {
+                throw new AppError_1.AppError('A profile with this information already exists', 400);
+            }
+            console.error('Unexpected error in createCompanyProfile:', error);
+            throw new AppError_1.AppError('Failed to create company profile', 500);
         }
-        if (!data.industry.trim()) {
-            throw new AppError_1.AppError('Industry is required', 400);
-        }
-        return this.companyRepository.create({
-            ...data,
-            userId,
-        });
     }
     async getProfile(userId) {
         const profile = await this.companyRepository.findByUserId(userId);

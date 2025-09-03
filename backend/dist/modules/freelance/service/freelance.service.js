@@ -41,23 +41,38 @@ class FreelanceService {
         this.freelanceRepository = new freelance_repository_1.FreelanceRepository();
     }
     async createProfile(userId, data) {
-        const existingProfile = await this.freelanceRepository.findByUserId(userId);
-        if (existingProfile) {
-            throw new AppError_1.AppError('Freelance profile already exists for this user', 400);
+        try {
+            const existingProfile = await this.freelanceRepository.findByUserId(userId);
+            if (existingProfile) {
+                throw new AppError_1.AppError('Freelance profile already exists for this user', 400);
+            }
+            if (data.dailyRate <= 0) {
+                throw new AppError_1.AppError('Daily rate must be greater than 0', 400);
+            }
+            if (data.availability <= 0 || data.availability > 168) {
+                throw new AppError_1.AppError('Availability must be between 1 and 168 hours per week', 400);
+            }
+            if (data.experience < 0) {
+                throw new AppError_1.AppError('Experience cannot be negative', 400);
+            }
+            return this.freelanceRepository.create({
+                ...data,
+                userId,
+            });
         }
-        if (data.dailyRate <= 0) {
-            throw new AppError_1.AppError('Daily rate must be greater than 0', 400);
+        catch (error) {
+            if (error.code === 'P2002' && error.meta?.target?.includes('userId')) {
+                throw new AppError_1.AppError('Freelance profile already exists for this user', 400);
+            }
+            if (error instanceof AppError_1.AppError) {
+                throw error;
+            }
+            if (error.code === 'P2002') {
+                throw new AppError_1.AppError('A profile with this information already exists', 400);
+            }
+            console.error('Unexpected error in createProfile:', error);
+            throw new AppError_1.AppError('Failed to create freelance profile', 500);
         }
-        if (data.availability <= 0 || data.availability > 168) {
-            throw new AppError_1.AppError('Availability must be between 1 and 168 hours per week', 400);
-        }
-        if (data.experience < 0) {
-            throw new AppError_1.AppError('Experience cannot be negative', 400);
-        }
-        return this.freelanceRepository.create({
-            ...data,
-            userId,
-        });
     }
     async getProfile(userId) {
         const profile = await this.freelanceRepository.findByUserId(userId);
