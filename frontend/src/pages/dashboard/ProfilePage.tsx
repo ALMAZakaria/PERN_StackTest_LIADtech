@@ -148,20 +148,36 @@ const ProfilePage: React.FC = () => {
         }
 
         try {
-          // Try to create first (in case profile doesn't exist)
-          console.log('Attempting to create company profile with data:', companyProfileData)
-          await skillbridgeService.createCompanyProfile(companyProfileData)
-          setSuccess('Company profile created successfully!')
-        } catch (err: any) {
-          console.log('Create failed with error:', err.response?.status, err.response?.data?.message)
-          if (err.response?.status === 400 && err.response?.data?.message?.includes('already exists')) {
-            // Profile already exists, update it
-            console.log('Profile already exists, updating company profile with data:', companyProfileData)
-            await skillbridgeService.updateCompanyProfile(companyProfileData)
-            setSuccess('Company profile updated successfully!')
-          } else {
-            throw err
+          // Check if profile already exists by trying to get it
+          let profileExists = false;
+          try {
+            await skillbridgeService.getCompanyProfile();
+            profileExists = true;
+          } catch (err: any) {
+            if (err.response?.status === 404) {
+              profileExists = false;
+            } else {
+              // If it's not a 404, there's some other error, throw it
+              throw err;
+            }
           }
+
+          if (profileExists) {
+            // Profile exists, update it
+            console.log('Profile exists, updating company profile with data:', companyProfileData);
+            await skillbridgeService.updateCompanyProfile(companyProfileData);
+            setSuccess('Company profile updated successfully!');
+          } else {
+            // Profile doesn't exist, create it
+            console.log('Profile does not exist, creating company profile with data:', companyProfileData);
+            await skillbridgeService.createCompanyProfile(companyProfileData);
+            setSuccess('Company profile created successfully!');
+          }
+        } catch (err: any) {
+          // Fallback error handling for any unexpected errors
+          console.error('Profile operation failed:', err);
+          const errorMessage = err.response?.data?.message || err.message || 'Failed to save profile';
+          throw new Error(errorMessage);
         }
       } else if (user?.userType === UserType.FREELANCER) {
         // Validate required fields for freelancer
@@ -193,20 +209,36 @@ const ProfilePage: React.FC = () => {
         }
 
         try {
-          // Try to create first (in case profile doesn't exist)
-          console.log('Attempting to create freelance profile with data:', freelanceProfileData)
-          await skillbridgeService.createFreelanceProfile(freelanceProfileData)
-          setSuccess('Freelance profile created successfully!')
-        } catch (err: any) {
-          console.log('Create failed with error:', err.response?.status, err.response?.data?.message)
-          if (err.response?.status === 400 && err.response?.data?.message?.includes('already exists')) {
-            // Profile already exists, update it
-            console.log('Profile already exists, updating freelance profile with data:', freelanceProfileData)
-            await skillbridgeService.updateFreelanceProfile(freelanceProfileData)
-            setSuccess('Freelance profile updated successfully!')
-          } else {
-            throw err
+          // Check if profile already exists by trying to get it
+          let profileExists = false;
+          try {
+            await skillbridgeService.getFreelanceProfile();
+            profileExists = true;
+          } catch (err: any) {
+            if (err.response?.status === 404) {
+              profileExists = false;
+            } else {
+              // If it's not a 404, there's some other error, throw it
+              throw err;
+            }
           }
+
+          if (profileExists) {
+            // Profile exists, update it
+            console.log('Profile exists, updating freelance profile with data:', freelanceProfileData);
+            await skillbridgeService.updateFreelanceProfile(freelanceProfileData);
+            setSuccess('Freelance profile updated successfully!');
+          } else {
+            // Profile doesn't exist, create it
+            console.log('Profile does not exist, creating freelance profile with data:', freelanceProfileData);
+            await skillbridgeService.createFreelanceProfile(freelanceProfileData);
+            setSuccess('Freelance profile created successfully!');
+          }
+        } catch (err: any) {
+          // Fallback error handling for any unexpected errors
+          console.error('Profile operation failed:', err);
+          const errorMessage = err.response?.data?.message || err.message || 'Failed to save profile';
+          throw new Error(errorMessage);
         }
       }
 

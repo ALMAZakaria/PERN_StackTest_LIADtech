@@ -9,25 +9,46 @@ export class CompanyService {
   }
 
   async createProfile(userId: string, data: CreateCompanyProfileData): Promise<any> {
-    // Check if profile already exists
-    const existingProfile = await this.companyRepository.findByUserId(userId);
-    if (existingProfile) {
-      throw new AppError('Company profile already exists for this user', 400);
-    }
+    try {
+      // Check if profile already exists
+      const existingProfile = await this.companyRepository.findByUserId(userId);
+      if (existingProfile) {
+        throw new AppError('Company profile already exists for this user', 400);
+      }
 
-    // Validate data
-    if (!data.companyName.trim()) {
-      throw new AppError('Company name is required', 400);
-    }
+      // Validate data
+      if (!data.companyName.trim()) {
+        throw new AppError('Company name is required', 400);
+      }
 
-    if (!data.industry.trim()) {
-      throw new AppError('Industry is required', 400);
-    }
+      if (!data.industry.trim()) {
+        throw new AppError('Industry is required', 400);
+      }
 
-    return this.companyRepository.create({
-      ...data,
-      userId,
-    });
+      return this.companyRepository.create({
+        ...data,
+        userId,
+      });
+    } catch (error: any) {
+      // Handle Prisma constraint violations
+      if (error.code === 'P2002' && error.meta?.target?.includes('userId')) {
+        throw new AppError('Company profile already exists for this user', 400);
+      }
+      
+      // Re-throw AppError instances
+      if (error instanceof AppError) {
+        throw error;
+      }
+      
+      // Handle other Prisma errors
+      if (error.code === 'P2002') {
+        throw new AppError('A profile with this information already exists', 400);
+      }
+      
+      // Log unexpected errors and throw generic error
+      console.error('Unexpected error in createCompanyProfile:', error);
+      throw new AppError('Failed to create company profile', 500);
+    }
   }
 
   async getProfile(userId: string): Promise<any> {
