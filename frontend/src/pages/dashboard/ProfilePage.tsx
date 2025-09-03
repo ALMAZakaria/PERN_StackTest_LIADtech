@@ -153,10 +153,10 @@ const ProfilePage: React.FC = () => {
           try {
             await skillbridgeService.getCompanyProfile();
             profileExists = true;
-          } catch (err: any) {
+        } catch (err: any) {
             if (err.response?.status === 404) {
               profileExists = false;
-            } else {
+          } else {
               // If it's not a 404, there's some other error, throw it
               throw err;
             }
@@ -214,10 +214,10 @@ const ProfilePage: React.FC = () => {
           try {
             await skillbridgeService.getFreelanceProfile();
             profileExists = true;
-          } catch (err: any) {
+        } catch (err: any) {
             if (err.response?.status === 404) {
               profileExists = false;
-            } else {
+          } else {
               // If it's not a 404, there's some other error, throw it
               throw err;
             }

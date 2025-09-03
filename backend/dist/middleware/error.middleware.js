@@ -7,7 +7,7 @@ exports.errorHandler = void 0;
 const logger_1 = __importDefault(require("../utils/logger"));
 const server_1 = require("../config/server");
 const response_1 = require("../utils/response");
-const error_handler_1 = require("../utils/error-handler");
+const AppError_1 = require("../utils/AppError");
 const errorHandler = (error, req, res, next) => {
     logger_1.default.error('Error caught by error handler:', {
         message: error.message,
@@ -21,7 +21,7 @@ const errorHandler = (error, req, res, next) => {
         res.status(400).json({ success: false, message: 'Invalid JSON format' });
         return;
     }
-    if (error instanceof error_handler_1.AppError) {
+    if (error instanceof AppError_1.AppError) {
         res.status(error.statusCode).json({
             success: false,
             message: error.message

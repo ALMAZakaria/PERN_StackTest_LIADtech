@@ -4,7 +4,7 @@ import { ZodError } from 'zod';
 import logger from '../utils/logger';
 import { config } from '../config/server';
 import { ResponseUtil } from '../utils/response';
-import { AppError } from '../utils/error-handler';
+import { AppError } from '../utils/AppError';
 
 export const errorHandler = (
   error: Error,
