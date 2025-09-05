@@ -170,7 +170,7 @@ if (config.SWAGGER_ENABLED) {
       },
       servers: [
         {
-          url: `https://pern-stacktest-liadtech-1.onrender.com/api/${config.API_VERSION}`,
+          url: `https://skillbridge-sand.vercel.app/api/${config.API_VERSION}`,
           description: 'Production server',
         },
         {
