@@ -6,7 +6,7 @@ import { API_BASE_URL } from '../config/environment';
 // Create axios instance
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 30000, // Increased timeout to 30 seconds
   headers: {
     'Content-Type': 'application/json',
   },
@@ -30,6 +30,18 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error) => {
+    // Handle timeout errors
+    if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      console.error('Request timeout - server may be slow to respond');
+      error.message = 'Request timeout. Please try again or refresh the page.';
+    }
+    
+    // Handle network errors
+    if (!error.response) {
+      console.error('Network error - server may be unavailable');
+      error.message = 'Network error. Please check your connection and try again.';
+    }
+    
     if (error.response?.status === 401) {
       // Token expired or invalid - only redirect if not already on login page
       const currentPath = window.location.pathname;

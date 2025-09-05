@@ -29,6 +29,7 @@ export default defineConfig({
       '/api': {
         target: 'https://pern-stacktest-liadtech-1.onrender.com',
         changeOrigin: true,
+        timeout: 30000,
       },
     },
     */
