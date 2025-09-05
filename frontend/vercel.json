@@ -15,7 +15,15 @@
       "dest": "https://pern-stacktest-liadtech-1.onrender.com/api/$1"
     },
     {
-      "src": "/((?!api/).*)",
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/(.*\\.(js|css|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot))",
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*)",
       "dest": "/index.html"
     }
   ],
